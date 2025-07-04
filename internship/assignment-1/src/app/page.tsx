@@ -1,52 +1,73 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 const quotes = [
-  "Believe you can and you're halfway there.",
-  "Your limitation—it's only your imagination.",
-  "Push yourself, because no one else is going to do it for you.",
-  "Great things never come from comfort zones.",
-  "Dream it. Wish it. Do it.",
-  "Success doesn’t just find you. You have to go out and get it.",
+  {
+    topic: "success",
+    text: "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+  },
+  {
+    topic: "success",
+    text: "Success usually comes to those who are too busy to be looking for it.",
+  },
+  {
+    topic: "success",
+    text: "Don't be afraid to give up the good to go for the great.",
+  },
+  {
+    topic: "life",
+    text: "Life is 10% what happens to us and 90% how we react to it.",
+  },
+  {
+    topic: "life",
+    text: "Keep your face always toward the sunshine—and shadows will fall behind you.",
+  },
+  {
+    topic: "life",
+    text: "In the middle of every difficulty lies opportunity.",
+  },
 ];
 
 export default function Home() {
   const [topic, setTopic] = useState("");
-  const [displayQuotes, setDisplayQuotes] = useState<string[]>([]);
+  const [filteredQuotes, setFilteredQuotes] = useState<string[]>([]);
 
-  const generateQuotes = () => {
-    const shuffled = quotes.sort(() => 0.5 - Math.random());
-    setDisplayQuotes(shuffled.slice(0, 3));
+  const handleGenerate = () => {
+    const result = quotes
+      .filter((q) => q.topic.toLowerCase() === topic.toLowerCase())
+      .slice(0, 3)
+      .map((q) => q.text);
+
+    setFilteredQuotes(result);
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen gap-6 p-8 bg-gray-50 text-center">
-      <h1 className="text-3xl font-bold text-gray-800">
-        Motivational Quote Generator
-      </h1>
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 gap-6">
+      <h1 className="text-2xl font-bold">Motivational Quote Generator</h1>
 
-      <input
-        type="text"
-        placeholder="Enter a topic"
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-        className="border rounded px-4 py-2 w-80 text-black"
-      />
+      <div className="flex gap-2 w-full max-w-md">
+        <Input
+          placeholder="Enter topic (e.g., success, life)"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+        />
+        <Button onClick={handleGenerate}>Generate</Button>
+      </div>
 
-      <button
-        onClick={generateQuotes}
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-      >
-        Generate Quotes
-      </button>
-
-      <div className="mt-6 space-y-4">
-        {displayQuotes.map((quote, index) => (
-          <p key={index} className="text-gray-700 italic">
-            "{quote}"
-          </p>
-        ))}
+      <div className="flex flex-col gap-4 mt-6 w-full max-w-md">
+        {filteredQuotes.length > 0 ? (
+          filteredQuotes.map((quote, idx) => (
+            <Card key={idx}>
+              <CardContent className="p-4 text-sm">{quote}</CardContent>
+            </Card>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm italic">No quotes yet...</p>
+        )}
       </div>
     </main>
   );
