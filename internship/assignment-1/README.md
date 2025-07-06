@@ -1,36 +1,153 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quote Generator Web App
+
+A Next.js web application that generates motivational quotes based on user-selected topics. Built with ShadCN UI components and deployed on Vercel.
+
+## Features
+
+- ✅ **ShadCN UI Form**: Clean, modern form interface using ShadCN UI components
+- ✅ **Topic-based Quote Generation**: Enter a topic to get relevant motivational quotes
+- ✅ **Local Quote Database**: 3 quotes displayed from a local JSON array
+- ✅ **Responsive Design**: Works on desktop and mobile devices
+- ✅ **Modern UI**: Beautiful, accessible interface with Tailwind CSS
+
+## Available Topics
+
+- **Success**: Quotes about achieving success and overcoming challenges
+- **Motivation**: Inspirational quotes to keep you going
+- **Life**: Wisdom about life and personal growth
+
+## Tech Stack
+
+- **Framework**: Next.js 15.3.4
+- **UI Components**: ShadCN UI
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
+- **Deployment**: Vercel
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- npm or pnpm
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd assignment-1
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Learn More
+### Building for Production
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How to Use
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Enter a topic in the input field (e.g., "success", "motivation", "life")
+2. Click "Generate" or press Enter
+3. View up to 3 relevant quotes displayed in beautiful cards
+4. Try different topics to discover new inspiration
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/
+│   ├── layout.tsx      # Root layout
+│   ├── page.tsx        # Main page with quote generator
+│   └── globals.css     # Global styles
+├── components/
+│   ├── ui/             # ShadCN UI components
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   └── input.tsx
+│   └── QuoteForm.tsx   # Alternative quote form component
+└── data/
+    └── quote.ts        # Local quote database
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment on Vercel
+
+### Option 1: Deploy via Vercel CLI
+
+1. Install Vercel CLI:
+```bash
+npm i -g vercel
+```
+
+2. Deploy:
+```bash
+vercel
+```
+
+3. Follow the prompts to connect your GitHub repository
+
+### Option 2: Deploy via Vercel Dashboard
+
+1. Push your code to GitHub
+2. Go to [vercel.com](https://vercel.com)
+3. Click "New Project"
+4. Import your GitHub repository
+5. Vercel will automatically detect Next.js and deploy
+
+### Option 3: Deploy with GitHub Integration
+
+1. Connect your GitHub account to Vercel
+2. Select your repository
+3. Vercel will automatically deploy on every push to main branch
+
+## Live Demo
+
+🔗 **Deployed on Vercel**: [Your Vercel URL will appear here after deployment]
+
+## Development
+
+### Adding New Quotes
+
+Edit `src/data/quote.ts` to add new quotes:
+
+```typescript
+export const quotes = [
+  { topic: "your-topic", quote: "Your inspirational quote here." },
+  // Add more quotes...
+];
+```
+
+### Customizing Styles
+
+The app uses Tailwind CSS for styling. Modify `src/app/globals.css` for custom styles.
+
+## Requirements Checklist
+
+- ✅ ShadCN UI form to enter a topic
+- ✅ Displays 3 quotes from local JSON/array  
+- ✅ Deployed to Vercel
+- ✅ Code in assignment-1/
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
