@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { quotes } from "@/data/quote";
+import { quotes } from "../data/quote";
 
 const suggestedTopics = [
   "success",
