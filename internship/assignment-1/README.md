@@ -35,7 +35,7 @@ A Next.js web application that generates motivational quotes based on user-selec
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone Nexium_Madiha_Assign1
 cd assignment-1
 ```
 
