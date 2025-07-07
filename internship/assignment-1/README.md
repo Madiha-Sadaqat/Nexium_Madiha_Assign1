@@ -84,39 +84,9 @@ src/
 ```
 
 ## Deployment on Vercel
-
-### Option 1: Deploy via Vercel CLI
-
-1. Install Vercel CLI:
-```bash
-npm i -g vercel
-```
-
-2. Deploy:
-```bash
-vercel
-```
-
-3. Follow the prompts to connect your GitHub repository
-
-### Option 2: Deploy via Vercel Dashboard
-
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Click "New Project"
-4. Import your GitHub repository
-5. Vercel will automatically detect Next.js and deploy
-
-### Option 3: Deploy with GitHub Integration
-
-1. Connect your GitHub account to Vercel
-2. Select your repository
-3. Vercel will automatically deploy on every push to main branch
-
 ## Live Demo
 
-🔗 **Deployed on Vercel**: [Your Vercel URL will appear here after deployment]
-
+🔗 **Deployed on Vercel**: https://nexium-madiha-assign1.vercel.app
 ## Development
 
 ### Adding New Quotes
@@ -140,14 +110,3 @@ The app uses Tailwind CSS for styling. Modify `src/app/globals.css` for custom s
 - ✅ Displays 3 quotes from local JSON/array  
 - ✅ Deployed to Vercel
 - ✅ Code in assignment-1/
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).

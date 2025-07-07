@@ -38,7 +38,7 @@ After deployment, Vercel will provide you with:
 ### Step 4: Update README
 Replace the placeholder in README.md:
 ```markdown
-🔗 **Deployed on Vercel**: https://your-project-name.vercel.app
+🔗 **Deployed on Vercel**: https://nexium-madiha-assign1.vercel.app
 ```
 
 ## Automatic Deployments
