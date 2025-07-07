@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+=======
+>>>>>>> e33f10e4325cdeec7f0ef8b28cbdb513d11e6c60
 # dependencies
 /node_modules
 /.pnp
@@ -8,6 +11,7 @@
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
+<<<<<<< HEAD
 !.yarn/versions
 
 # testing
@@ -25,11 +29,25 @@
 *.pem
 
 # debug
+=======
+!.yarn/sdks
+!.yarn/versions
+
+# dotenv files
+.env
+.env.*
+!.env.example
+
+# logs
+logs
+*.log
+>>>>>>> e33f10e4325cdeec7f0ef8b28cbdb513d11e6c60
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+<<<<<<< HEAD
 # env files (can opt-in for committing if needed)
 .env*
 
@@ -39,3 +57,53 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+=======
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build outputs
+/build
+/.next
+/out
+/dist
+
+# Coverage
+/coverage
+.nyc_output
+*.lcov
+
+# Caches
+.cache
+.parcel-cache
+.vitepress/cache
+.vitepress/dist
+.svelte-kit/
+.docusaurus
+.vuepress/dist
+.temp
+
+# Misc
+.DS_Store
+*.tgz
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.node_repl_history
+.vercel
+firebase
+.tern-port
+.vscode-test
+
+# TypeScript
+next-env.d.ts
+
+# Vite logs files
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+>>>>>>> e33f10e4325cdeec7f0ef8b28cbdb513d11e6c60
