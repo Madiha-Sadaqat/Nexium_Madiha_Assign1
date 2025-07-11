@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function BlogUrlForm() {
   const [url, setUrl] = useState("");
@@ -70,37 +72,42 @@ export default function BlogUrlForm() {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
+    <div className="flex flex-col items-center w-full max-w-xl mx-auto mt-12">
+      <div className="flex flex-col items-center mb-8">
+        <div className="text-5xl mb-2 select-none">📄✨</div>
+        <h1 className="text-3xl font-extrabold text-primary drop-shadow mb-1 tracking-tight">Blog Summariser</h1>
+        <p className="text-lg text-gray-700 font-medium mb-2">Summarize any blog in seconds!</p>
+      </div>
+      <form onSubmit={handleSubmit} className="w-full glass-card space-y-4 z-10">
+        <Input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Enter blog URL"
-          className="input input-bordered w-full"
           required
         />
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <Button type="submit" className="w-full main-gradient-btn" disabled={loading}>
           {loading ? "Extracting..." : "Extract Blog Content"}
-        </button>
+        </Button>
       </form>
       {error && <div className="text-red-500 mt-2">{error}</div>}
       {result && (
-        <div className="mt-6 p-4 border rounded bg-gray-50">
-          <h2 className="font-bold text-lg mb-2">{result.title}</h2>
-          <p>{result.main}</p>
-          <button
-            className="btn btn-secondary mt-4"
+        <div className="mt-8 w-full glass-card z-10">
+          <h2 className="font-bold text-2xl mb-3 text-primary drop-shadow">{result.title}</h2>
+          <div className="mb-6 whitespace-pre-line text-gray-800 text-base leading-relaxed" style={{ maxHeight: 300, overflowY: 'auto' }}>{result.main}</div>
+          <Button
+            variant="secondary"
+            className="mt-2 pulse-on-hover"
             onClick={handleSummarise}
             disabled={summarising}
           >
             {summarising ? "Summarising..." : "Summarise"}
-          </button>
+          </Button>
           {summaryError && <div className="text-red-500 mt-2">{summaryError}</div>}
           {summary && (
-            <div className="mt-4 p-3 border rounded bg-white">
-              <h3 className="font-semibold mb-1">Summary:</h3>
-              <p>{summary}</p>
+            <div className="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50/60 rounded backdrop-blur-sm">
+              <h3 className="font-semibold mb-2 text-blue-700 text-lg">Summary:</h3>
+              <p className="text-blue-900 whitespace-pre-line text-base">{summary}</p>
             </div>
           )}
         </div>
