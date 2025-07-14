@@ -64,24 +64,24 @@ export default function Home() {
 
         {/* Input and Button */}
         <div className="flex gap-2 w-full max-w-xl mb-8">
-          <Input
+        <Input
             placeholder="Enter topic (e.g., happiness, leadership)"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
             className="text-base px-4 py-2 border-2 border-blue-400 rounded-lg bg-blue-50 text-gray-900 font-semibold placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors duration-200"
-          />
+        />
           <Button
             onClick={handleGenerate}
             className="text-base px-6 py-2 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 hover:from-blue-700 hover:to-pink-600 text-white rounded-lg shadow-md font-bold transition-colors duration-200"
           >
             Generate
           </Button>
-        </div>
+      </div>
 
         {/* Quotes Display */}
         <div className="flex flex-col gap-6 w-full max-w-xl">
-          {filteredQuotes.length > 0 ? (
-            filteredQuotes.map((quote, idx) => (
+        {filteredQuotes.length > 0 ? (
+          filteredQuotes.map((quote, idx) => (
               <Card
                 key={idx}
                 className="bg-gradient-to-br from-pink-100 via-blue-100 to-yellow-100 shadow-lg border border-gray-200 animate-fade-in rounded-xl transition-transform duration-200 hover:scale-[1.025] hover:shadow-2xl"
@@ -92,11 +92,11 @@ export default function Home() {
                   {quote}
                   <span className="block mt-2 text-blue-600 text-2xl">”</span>
                 </CardContent>
-              </Card>
-            ))
-          ) : (
+            </Card>
+          ))
+        ) : (
             <p className="text-gray-500 text-base text-center italic">No quotes found for this topic. Try: success, motivation, life, happiness, perseverance, leadership, or creativity.</p>
-          )}
+        )}
         </div>
         <style jsx global>{`
           @keyframes fade-in {
