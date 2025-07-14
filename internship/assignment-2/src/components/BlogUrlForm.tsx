@@ -312,7 +312,7 @@ export default function BlogUrlForm() {
                     } else {
                       setAiUrduError(data.error || "Unknown error");
                     }
-                  } catch (err) {
+                  } catch {
                     setAiUrduError("Failed to translate using AI.");
                   } finally {
                     setAiUrduLoading(false);
