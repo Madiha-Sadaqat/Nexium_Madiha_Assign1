@@ -118,12 +118,8 @@ export default function BlogUrlForm() {
       } else {
         setError(data.error || "Unknown error");
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
+    } catch {
       setError("Failed to fetch blog content.");
-      }
     } finally {
       setLoading(false);
     }
@@ -215,7 +211,7 @@ export default function BlogUrlForm() {
               {trendingBlogs.filter(blog => blog.includes(url)).length === 0 && (
                 <div className="px-4 py-2 text-gray-400 text-sm">No suggestions</div>
               )}
-              {trendingBlogs.filter(blog => blog.includes(url)).map((blog, idx) => (
+              {trendingBlogs.filter(blog => blog.includes(url)).map((blog) => (
                 <div
                   key={blog}
                   className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm rounded"
