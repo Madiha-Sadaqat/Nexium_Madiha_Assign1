@@ -159,12 +159,8 @@ export default function BlogUrlForm() {
       } else {
         setSummaryError(data.error || "Unknown error");
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        setSummaryError(err.message);
-      } else {
-        setSummaryError("Failed to summarise blog content.");
-      }
+    } catch {
+      setSummaryError("Failed to summarise blog content.");
     } finally {
       setSummarising(false);
     }
