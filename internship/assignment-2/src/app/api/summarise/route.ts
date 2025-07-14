@@ -7,8 +7,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No content provided' }, { status: 400 });
     }
 
-    // Truncate content to 2000 characters (safe for BART)
-    const truncated = content.slice(0, 2000);
+    // Truncate content to 1000 characters (safer for BART)
+    const truncated = content.slice(0, 1000);
 
     const hfToken = process.env.HUGGINGFACE_API_TOKEN;
     const hfRes = await fetch('https://api-inference.huggingface.co/models/facebook/bart-large-cnn', {
