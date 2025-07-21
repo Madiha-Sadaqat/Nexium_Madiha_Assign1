@@ -22,6 +22,7 @@ Resume Tailor allows users to upload or paste their resume and a job description
 - Option to edit AI output
 - Save/download result as PDF
 - View/edit history (stored in MongoDB)
+- Real-time chat with AI assistant
 
 ## 5. Success Metrics
 - Successful logins
