@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FiFileText, FiMoon, FiSun, FiArrowRight, FiCheck, FiHome } from "react-icons/fi";
+import { FiFileText, FiMoon, FiSun, FiArrowRight, FiCheck, FiUser } from "react-icons/fi";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import NeuralBackground from "@/components/NeuralBackground";
 
-export default function TemplatesPage() {
+export default function AuthTemplatesPage() {
   const [darkMode, setDarkMode] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
   const router = useRouter();
 
   // Dark mode initialization
@@ -25,6 +25,11 @@ export default function TemplatesPage() {
     }
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
+
+  const handleTemplateSelect = (templateId: number) => {
+    setSelectedTemplate(templateId);
+    router.push(`/input?template=${templateId}`);
+  };
 
   const templates = [
     {
@@ -77,10 +82,6 @@ export default function TemplatesPage() {
     }
   ];
 
-  const handleTemplateClick = () => {
-    router.push('/');
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
       <NeuralBackground darkMode={darkMode} />
@@ -91,10 +92,8 @@ export default function TemplatesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center">
-                <Link href="/" className="flex-shrink-0 flex items-center">
-                  <FiFileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                  <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Resume</span>
-                </Link>
+                <FiFileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Resume</span>
               </div>
               <div className="flex items-center space-x-4">
                 <button
@@ -103,12 +102,9 @@ export default function TemplatesPage() {
                 >
                   {darkMode ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
                 </button>
-                <Link
-                  href="/"
-                  className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-gray-700"
-                >
-                  <FiHome className="mr-1" /> Home
-                </Link>
+                <div className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                  <FiUser className="mr-1" /> Dashboard
+                </div>
               </div>
             </div>
           </div>
@@ -136,7 +132,7 @@ export default function TemplatesPage() {
                 transition={{ delay: 0.1 }}
                 className="mt-5 max-w-xl mx-auto text-xl text-gray-500 dark:text-gray-400"
               >
-                Sign in to select and customize a template
+                Select a design to start customizing
               </motion.p>
             </div>
 
@@ -148,8 +144,11 @@ export default function TemplatesPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
                   whileHover={{ y: -5 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border-2 border-transparent transition-all duration-200 cursor-pointer"
-                  onClick={handleTemplateClick}
+                  className={`bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border-2 ${
+                    selectedTemplate === template.id 
+                      ? 'border-indigo-500 dark:border-indigo-400' 
+                      : 'border-transparent'
+                  } transition-all duration-200`}
                 >
                   {/* Template Preview Image */}
                   <div className="h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden">
@@ -167,9 +166,16 @@ export default function TemplatesPage() {
                   </div>
                   
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {template.name}
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {template.name}
+                      </h3>
+                      {selectedTemplate === template.id && (
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900">
+                          <FiCheck className="text-indigo-600 dark:text-indigo-300" />
+                        </div>
+                      )}
+                    </div>
                     <div className="mt-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
                         {template.category}
@@ -186,9 +192,17 @@ export default function TemplatesPage() {
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4">
                     <button
-                      className="w-full flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-gray-100 dark:text-indigo-400 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                      onClick={() => handleTemplateSelect(template.id)}
+                      className={`w-full flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium ${
+                        selectedTemplate === template.id
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'text-indigo-600 bg-white hover:bg-gray-100 dark:text-indigo-400 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                      }`}
                     >
-                      Sign In to Select
+                      {selectedTemplate === template.id ? 'Selected' : 'Select Template'}
+                      {selectedTemplate === template.id && (
+                        <FiCheck className="ml-2" />
+                      )}
                     </button>
                   </div>
                 </motion.div>
