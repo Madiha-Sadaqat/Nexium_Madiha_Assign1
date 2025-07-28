@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import NeuralBackground from "@/components/NeuralBackground";
 import Link from "next/link";
@@ -16,33 +16,65 @@ import {
   FiArrowRight,
   FiArrowLeft,
   FiFileText,
+  FiLogOut,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { DarkModeContext } from "../DarkModeProvider";
+
+// Constants for localStorage keys
+const RESUME_DRAFT_KEY = 'resumeDraft';
+const CURRENT_RESUME_KEY = 'currentResume';
+
+// Add types for formData and related state
+interface Experience {
+  jobTitle: string;
+  company: string;
+  duration: string;
+  responsibilities: string;
+  achievements: string;
+}
+interface Education {
+  degree: string;
+  institution: string;
+  year: string;
+  gpa: string;
+  honors: string;
+}
+interface Skills {
+  technical: string;
+  soft: string;
+  languages: string;
+  certifications: string;
+}
+interface Target {
+  jobTitle: string;
+  industry: string;
+  salaryExpectation: string;
+  locationPreference: string;
+  workType: string;
+  additionalPreferences: string;
+}
+interface Personal {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  linkedin: string;
+  portfolio: string;
+}
+interface FormData {
+  personal: Personal;
+  experience: Experience[];
+  education: Education[];
+  skills: Skills;
+  target: Target;
+}
 
 export default function ResumeInputPage() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
   const [activeSection, setActiveSection] = useState("personal");
   const router = useRouter();
-  const [setCompletionPercentage] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Dark mode initialization
-  useEffect(() => {
-    const savedMode = localStorage.getItem("darkMode");
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setDarkMode(savedMode ? JSON.parse(savedMode) : systemPrefersDark);
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-  }, [darkMode]);
 
   // Initialize form with all fields
   const initialFormData = {
@@ -90,14 +122,15 @@ export default function ResumeInputPage() {
 
   // Load draft if exists
   useEffect(() => {
-    const savedDraft = localStorage.getItem("resumeDraft");
-    if (savedDraft) {
-      setFormData(JSON.parse(savedDraft));
+    if (typeof window !== 'undefined') {
+      const savedDraft = localStorage.getItem("resumeDraft");
+      if (savedDraft) {
+        setFormData(JSON.parse(savedDraft));
+      }
     }
   }, []);
 
-const [formData, setFormData] = useState(() => {
-  // Only run this on client side
+const [formData, setFormData] = useState<FormData>(() => {
   if (typeof window !== 'undefined') {
     try {
       const savedDraft = localStorage.getItem('resumeDraft');
@@ -132,6 +165,7 @@ const [formData, setFormData] = useState(() => {
   // Default case - return initial empty form
   return initialFormData;
 });
+
 
   const sections = [
     { id: "personal", icon: FiUser, label: "Personal Info" },
@@ -222,11 +256,13 @@ const [formData, setFormData] = useState(() => {
 
  const handleSaveDraft = () => {
   setIsSaving(true);
-  // Save complete form data including all sections
-  localStorage.setItem('resumeDraft', JSON.stringify({
-    ...formData,
-    lastSaved: new Date().toISOString() // Add timestamp for reference
-  }));
+  if (typeof window !== 'undefined') {
+    // Save complete form data including all sections
+    localStorage.setItem('resumeDraft', JSON.stringify({
+      ...formData,
+      lastSaved: new Date().toISOString() // Add timestamp for reference
+    }));
+  }
   setTimeout(() => {
     setIsSaving(false);
     // Optional: Replace with toast notification
@@ -234,34 +270,51 @@ const [formData, setFormData] = useState(() => {
   }, 500);
 };
 
-  const handleTailorResume = () => {
-    setIsSaving(true);
-    localStorage.setItem('currentResume', JSON.stringify({
+const handleTailorResume = () => {
+  setIsSaving(true);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(CURRENT_RESUME_KEY, JSON.stringify({
       title: formData.target.jobTitle,
       date: new Date().toLocaleDateString(),
       content: {
         name: formData.personal.fullName,
         email: formData.personal.email,
         phone: formData.personal.phone,
+        address: formData.personal.address,
         linkedin: formData.personal.linkedin,
+        portfolio: formData.personal.portfolio,
         summary: formData.target.additionalPreferences,
-        skills: formData.skills.technical.split(',').map(skill => skill.trim()),
+        skills: {
+          technical: formData.skills.technical.split(',').map(skill => skill.trim()),
+          soft: formData.skills.soft.split(',').map(skill => skill.trim()),
+          languages: formData.skills.languages.split(',').map(skill => skill.trim()),
+          certifications: formData.skills.certifications.split(',').map(skill => skill.trim())
+        },
         experience: formData.experience.map(exp => ({
           role: exp.jobTitle,
           company: exp.company,
           duration: exp.duration,
-          responsibilities: exp.responsibilities
+          responsibilities: exp.responsibilities,
+          achievements: exp.achievements
         })),
         education: formData.education.map(edu => ({
           degree: edu.degree,
           institution: edu.institution,
           year: edu.year,
+          gpa: edu.gpa,
           honors: edu.honors
-        }))
+        })),
+        targetJob: {
+          industry: formData.target.industry,
+          salaryExpectation: formData.target.salaryExpectation,
+          locationPreference: formData.target.locationPreference,
+          workType: formData.target.workType
+        }
       }
     }));
-    router.push('/output-page');
-  };
+  }
+  router.push('/output-page');
+};
 
   function handleNext() {
     const currentIndex = sections.findIndex((s) => s.id === activeSection);
@@ -292,6 +345,11 @@ const [formData, setFormData] = useState(() => {
     return Object.values(sectionData).some((val) => Boolean(val));
   }
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push('/'); // Redirect to login page (src/app/page.tsx)
+  };
+
   const renderSectionContent = () => {
     switch (activeSection) {
       case "personal":
@@ -305,7 +363,7 @@ const [formData, setFormData] = useState(() => {
                 name="fullName"
                 value={formData.personal.fullName || ""}
                 onChange={(e) => handleInputChange(e, "personal")}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="John Doe"
               />
             </div>
@@ -318,7 +376,7 @@ const [formData, setFormData] = useState(() => {
                 type="email"
                 value={formData.personal.email || ""}
                 onChange={(e) => handleInputChange(e, "personal")}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="john@example.com"
               />
             </div>
@@ -330,7 +388,7 @@ const [formData, setFormData] = useState(() => {
                 name="phone"
                 value={formData.personal.phone || ""}
                 onChange={(e) => handleInputChange(e, "personal")}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="+92 300 1234567"
               />
             </div>
@@ -342,7 +400,7 @@ const [formData, setFormData] = useState(() => {
                 name="linkedin"
                 value={formData.personal.linkedin || ""}
                 onChange={(e) => handleInputChange(e, "personal")}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="linkedin.com/in/yourprofile"
               />
             </div>
@@ -368,7 +426,7 @@ const [formData, setFormData] = useState(() => {
                       onChange={(e) =>
                         handleInputChange(e, "experience", index)
                       }
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                       placeholder="Software Engineer"
                     />
                   </div>
@@ -382,7 +440,7 @@ const [formData, setFormData] = useState(() => {
                       onChange={(e) =>
                         handleInputChange(e, "experience", index)
                       }
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                       placeholder="Google Inc."
                     />
                   </div>
@@ -395,7 +453,7 @@ const [formData, setFormData] = useState(() => {
                     name="responsibilities"
                     value={exp.responsibilities || ""}
                     onChange={(e) => handleInputChange(e, "experience", index)}
-                    className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                    className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                     placeholder="Describe your key responsibilities..."
                   />
                 </div>
@@ -435,7 +493,7 @@ const [formData, setFormData] = useState(() => {
                       name="degree"
                       value={edu.degree || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                     >
                       <option value="">Select Degree</option>
                       <option value="High School">High School</option>
@@ -454,7 +512,7 @@ const [formData, setFormData] = useState(() => {
                       name="institution"
                       value={edu.institution || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                       placeholder="University of California"
                     />
                   </div>
@@ -471,7 +529,7 @@ const [formData, setFormData] = useState(() => {
                       max={new Date().getFullYear() + 5}
                       value={edu.year || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                       placeholder="2020"
                     />
                   </div>
@@ -487,7 +545,7 @@ const [formData, setFormData] = useState(() => {
                       max="4"
                       value={edu.gpa || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                       placeholder="3.5"
                     />
                   </div>
@@ -500,7 +558,7 @@ const [formData, setFormData] = useState(() => {
                     name="honors"
                     value={edu.honors || ""}
                     onChange={(e) => handleInputChange(e, "education", index)}
-                    className="w-full h-20 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                    className="w-full h-20 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                     placeholder="Dean's List, Scholarships, etc."
                   />
                 </div>
@@ -534,7 +592,7 @@ const [formData, setFormData] = useState(() => {
                 name="technical"
                 value={formData.skills.technical || ""}
                 onChange={(e) => handleInputChange(e, "skills")}
-                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="JavaScript, React, Python, Machine Learning..."
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -550,7 +608,7 @@ const [formData, setFormData] = useState(() => {
                 name="soft"
                 value={formData.skills.soft || ""}
                 onChange={(e) => handleInputChange(e, "skills")}
-                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="Leadership, Communication, Teamwork..."
               />
             </div>
@@ -564,7 +622,7 @@ const [formData, setFormData] = useState(() => {
                   name="languages"
                   value={formData.skills.languages || ""}
                   onChange={(e) => handleInputChange(e, "skills")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                   placeholder="English (Fluent), Spanish (Intermediate)..."
                 />
               </div>
@@ -576,7 +634,7 @@ const [formData, setFormData] = useState(() => {
                   name="certifications"
                   value={formData.skills.certifications || ""}
                   onChange={(e) => handleInputChange(e, "skills")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                   placeholder="AWS Certified, PMP, Google Analytics..."
                 />
               </div>
@@ -596,7 +654,7 @@ const [formData, setFormData] = useState(() => {
                   name="jobTitle"
                   value={formData.target.jobTitle || ""}
                   onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                   placeholder="Senior Software Engineer"
                 />
               </div>
@@ -608,7 +666,7 @@ const [formData, setFormData] = useState(() => {
                   name="industry"
                   value={formData.target.industry || ""}
                   onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 >
                   <option value="">Select Industry</option>
                   <option value="Technology">Technology</option>
@@ -635,7 +693,7 @@ const [formData, setFormData] = useState(() => {
                     type="number"
                     value={formData.target.salaryExpectation || ""}
                     onChange={(e) => handleInputChange(e, "target")}
-                    className="w-full pl-8 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                    className="w-full pl-8 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                     placeholder="80000"
                   />
                 </div>
@@ -648,7 +706,7 @@ const [formData, setFormData] = useState(() => {
                   name="locationPreference"
                   value={formData.target.locationPreference || ""}
                   onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 >
                   <option value="">Select Preference</option>
                   <option value="On-site">On-site</option>
@@ -665,7 +723,7 @@ const [formData, setFormData] = useState(() => {
                   name="workType"
                   value={formData.target.workType || ""}
                   onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 >
                   <option value="">Select Type</option>
                   <option value="Full-time">Full-time</option>
@@ -684,7 +742,7 @@ const [formData, setFormData] = useState(() => {
                 name="additionalPreferences"
                 value={formData.target.additionalPreferences || ""}
                 onChange={(e) => handleInputChange(e, "target")}
-                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 dark:text-white"
+                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                 placeholder="Company size, benefits, culture preferences..."
               />
             </div>
@@ -730,6 +788,13 @@ const [formData, setFormData] = useState(() => {
               >
                 <FiHome className="mr-1" /> Home
               </Link>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-colors ml-2"
+                aria-label="Logout"
+              >
+                <FiLogOut className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>

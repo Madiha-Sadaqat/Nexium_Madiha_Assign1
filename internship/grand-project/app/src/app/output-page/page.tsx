@@ -1,67 +1,97 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import NeuralBackground from "@/components/NeuralBackground";
-import { FiFileText, FiDownload, FiSave, FiSun, FiMoon, FiHome, FiEdit, FiShare2, FiPrinter, FiX } from "react-icons/fi";
+import { FiFileText, FiDownload, FiSave, FiSun, FiMoon, FiHome, FiEdit, FiShare2, FiPrinter, FiX, FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 import { generateResumePDF, generateResumeDOCX } from "@/lib/resume-generator";
 //import { saveResume } from "@/lib/resume-storage";
+import { DarkModeContext } from "../DarkModeProvider";
+
+// Constants for localStorage keys
+const RESUME_DRAFT_KEY = 'resumeDraft';
+const CURRENT_RESUME_KEY = 'currentResume';
+
+// Add types for generatedResume and related state
+interface ExperienceOut {
+  role: string;
+  company: string;
+  duration: string;
+  responsibilities: string;
+  achievements?: string;
+}
+interface EducationOut {
+  degree: string;
+  institution: string;
+  year: string;
+  gpa?: string;
+  honors: string;
+}
+interface SkillsOut {
+  technical: string[];
+  soft: string[];
+  languages: string[];
+  certifications: string[];
+}
+interface TargetJobOut {
+  industry?: string;
+  salaryExpectation?: string;
+  locationPreference?: string;
+  workType?: string;
+}
+interface ResumeContent {
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  linkedin: string;
+  portfolio?: string;
+  summary: string;
+  skills: SkillsOut;
+  experience: ExperienceOut[];
+  education: EducationOut[];
+  targetJob?: TargetJobOut;
+}
+interface GeneratedResume {
+  title: string;
+  date: string;
+  content: ResumeContent;
+}
 
 export default function AIOutputPage() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const router = useRouter();
 
-  // Dark mode initialization
-  useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setDarkMode(savedMode ? JSON.parse(savedMode) : systemPrefersDark);
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
-
   // Get resume data from localStorage
-  const [generatedResume, setGeneratedResume] = useState({
+  const [generatedResume, setGeneratedResume] = useState<GeneratedResume>({
     title: "",
     date: new Date().toLocaleDateString(),
     content: {
       name: "",
       email: "",
       phone: "",
+      address: "",
       linkedin: "",
+      portfolio: "",
       summary: "",
-      skills: [] as string[],
-      experience: [] as Array<{
-        role: string;
-        company: string;
-        duration: string;
-        responsibilities: string;
-      }>,
-      education: [] as Array<{
-        degree: string;
-        institution: string;
-        year: string;
-        honors: string;
-      }>
+      skills: { technical: [], soft: [], languages: [], certifications: [] },
+      experience: [],
+      education: [],
+      targetJob: {}
     }
   });
 
   useEffect(() => {
-    const savedResume = localStorage.getItem('currentResume');
-    if (savedResume) {
-      setGeneratedResume(JSON.parse(savedResume));
+    if (typeof window !== 'undefined') {
+      const savedResume = localStorage.getItem('currentResume');
+      if (savedResume) {
+        setGeneratedResume(JSON.parse(savedResume));
+      }
     }
   }, []);
 
@@ -84,8 +114,10 @@ export default function AIOutputPage() {
 
   const handleSave = async () => {
     try {
-      // Save to localStorage (replace with your database save logic)
-      localStorage.setItem('currentResume', JSON.stringify(generatedResume));
+      if (typeof window !== 'undefined') {
+        // Save to localStorage (replace with your database save logic)
+        localStorage.setItem('currentResume', JSON.stringify(generatedResume));
+      }
       alert('Resume saved successfully!');
     } catch (error) {
       console.error("Save failed:", error);
@@ -93,80 +125,96 @@ export default function AIOutputPage() {
     }
   };
 
-  const handleEdit = () => {
-    // Transform data back to input form structure
-    const formData = {
-      personal: {
-        fullName: generatedResume.content.name,
-        email: generatedResume.content.email,
-        phone: generatedResume.content.phone,
-        linkedin: generatedResume.content.linkedin
-      },
-      experience: generatedResume.content.experience.map(exp => ({
-        jobTitle: exp.role,
-        company: exp.company,
-        responsibilities: exp.responsibilities,
-        startYear: exp.duration?.split(' - ')[0] || '',
-        endYear: exp.duration?.split(' - ')[1] || ''
-      })),
-      education: generatedResume.content.education.map(edu => ({
-        degree: edu.degree,
-        institution: edu.institution,
-        year: edu.year,
-        honors: edu.honors,
-        gpa: ''
-      })),
-      skills: {
-        technical: generatedResume.content.skills.join(', '),
-        soft: '',
-        languages: '',
-        certifications: ''
-      },
-      target: {
-        jobTitle: generatedResume.title,
-        additionalPreferences: generatedResume.content.summary,
-        industry: '',
-        salaryExpectation: '',
-        locationPreference: '',
-        workType: '',
-      }
-    };
-
-    localStorage.setItem('resumeDraft', JSON.stringify(formData));
-    router.push('/resume-input');
+ const handleEdit = () => {
+  // Transform data back to input form structure
+  const formData = {
+    personal: {
+      fullName: generatedResume.content.name || "",
+      email: generatedResume.content.email || "",
+      phone: generatedResume.content.phone || "",
+      address: generatedResume.content.address || "",
+      linkedin: generatedResume.content.linkedin || "",
+      portfolio: generatedResume.content.portfolio || ""
+    },
+    experience: generatedResume.content.experience?.map(exp => ({
+      jobTitle: exp.role || "",
+      company: exp.company || "",
+      duration: exp.duration || "",
+      responsibilities: exp.responsibilities || "",
+      achievements: exp.achievements || ""
+    })) || [],
+    education: generatedResume.content.education?.map(edu => ({
+      degree: edu.degree || "",
+      institution: edu.institution || "",
+      year: edu.year || "",
+      gpa: edu.gpa || "",
+      honors: edu.honors || ""
+    })) || [],
+    skills: {
+      technical: generatedResume.content.skills?.technical?.join(', ') || "",
+      soft: generatedResume.content.skills?.soft?.join(', ') || "",
+      languages: generatedResume.content.skills?.languages?.join(', ') || "",
+      certifications: generatedResume.content.skills?.certifications?.join(', ') || ""
+    },
+    target: {
+      jobTitle: generatedResume.title || "",
+      industry: generatedResume.content.targetJob?.industry || "",
+      salaryExpectation: generatedResume.content.targetJob?.salaryExpectation || "",
+      locationPreference: generatedResume.content.targetJob?.locationPreference || "",
+      workType: generatedResume.content.targetJob?.workType || "",
+      additionalPreferences: generatedResume.content.summary || ""
+    }
   };
 
+  // Save the transformed data to localStorage
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('resumeDraft', JSON.stringify(formData));
+  }
+  
+  // Redirect to the input page
+  router.push('/resume-input');
+};
+
   const handleShare = (platform: string) => {
-    const message = `Check out my resume: ${generatedResume.title}`;
-    const url = window.location.href;
-    
-    switch(platform) {
-      case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(message + ' ' + url)}`);
-        break;
-      case 'linkedin':
-        window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(message)}`);
-        break;
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(message + ' ' + url)}`);
-        break;
-      default:
-        if (navigator.share) {
-          navigator.share({
-            title: 'My Resume',
-            text: message,
-            url: url
-          });
-        } else {
-          navigator.clipboard.writeText(`${message}\n${url}`);
-          alert('Link copied to clipboard!');
-        }
+    if (typeof window !== 'undefined') {
+      const message = `Check out my resume: ${generatedResume.title}`;
+      const url = window.location.href;
+      
+      switch(platform) {
+        case 'whatsapp':
+          window.open(`https://wa.me/?text=${encodeURIComponent(message + ' ' + url)}`);
+          break;
+        case 'linkedin':
+          window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(message)}`);
+          break;
+        case 'twitter':
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(message + ' ' + url)}`);
+          break;
+        default:
+          if (navigator.share) {
+            navigator.share({
+              title: 'My Resume',
+              text: message,
+              url: url
+            });
+          } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${message}\n${url}`);
+            alert('Link copied to clipboard!');
+          }
+      }
+      setShowShareOptions(false);
     }
-    setShowShareOptions(false);
   };
 
   const handlePrint = () => {
-    window.print();
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push('/'); // Redirect to login page (src/app/page.tsx)
   };
 
   return (
@@ -200,6 +248,13 @@ export default function AIOutputPage() {
               >
                 <FiHome className="mr-1" /> Home
               </Link>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-colors ml-2"
+                aria-label="Logout"
+              >
+                <FiLogOut className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -264,120 +319,228 @@ export default function AIOutputPage() {
             <div className="p-8">
               <div className="max-w-3xl mx-auto">
                 {/* Resume Preview */}
-                <div className="bg-white dark:bg-gray-700 rounded-xl shadow-md p-8 border border-gray-200 dark:border-gray-600">
-                  {/* Header */}
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {generatedResume.content.name || "Your Name"}
-                    </h2>
-                    <p className="text-indigo-600 dark:text-indigo-400">
-                      {generatedResume.title || "Professional Title"}
-                    </p>
-                    {(generatedResume.content.email || generatedResume.content.phone || generatedResume.content.linkedin) && (
-                      <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600 dark:text-gray-300">
-                        {generatedResume.content.email && <span>{generatedResume.content.email}</span>}
-                        {generatedResume.content.phone && <span>{generatedResume.content.phone}</span>}
-                        {generatedResume.content.linkedin && (
-                          <a 
-                            href={generatedResume.content.linkedin.startsWith('http') ? generatedResume.content.linkedin : `https://${generatedResume.content.linkedin}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                          >
-                            LinkedIn
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
+               <div className="bg-white dark:bg-gray-700 rounded-xl shadow-md p-8 border border-gray-200 dark:border-gray-600">
+  {/* Header with Target Job Title */}
+  <div className="text-center mb-8">
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+      {generatedResume.content.name || "Your Name"}
+    </h2>
+    <p className="text-indigo-600 dark:text-indigo-400 font-medium">
+      {generatedResume.title || "Target Job Title"} {/* This comes from formData.target.jobTitle */}
+    </p>
+    <div className="flex flex-wrap justify-center gap-4 mt-2">
+      {generatedResume.content.email && (
+        <span className="text-gray-600 dark:text-gray-300">
+          {generatedResume.content.email}
+        </span>
+      )}
+      {generatedResume.content.phone && (
+        <span className="text-gray-600 dark:text-gray-300">
+          {generatedResume.content.phone}
+        </span>
+      )}
+      {generatedResume.content.linkedin && (
+        <a 
+          href={generatedResume.content.linkedin.startsWith('http') ? 
+                generatedResume.content.linkedin : 
+                `https://${generatedResume.content.linkedin}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
+          LinkedIn
+        </a>
+      )}
+      {generatedResume.content.portfolio && (
+        <a 
+          href={generatedResume.content.portfolio.startsWith('http') ? 
+                generatedResume.content.portfolio : 
+                `https://${generatedResume.content.portfolio}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
+          Portfolio
+        </a>
+      )}
+    </div>
+  </div>
 
-                  {/* Summary */}
-                  {generatedResume.content.summary && (
-                    <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2 mb-3">
-                        SUMMARY
-                      </h3>
-                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                        {generatedResume.content.summary}
-                      </p>
-                    </div>
-                  )}
+  {/* Target Job Summary - Only show if we have target job info */}
+  {(generatedResume.content.targetJob?.industry || 
+    generatedResume.content.targetJob?.workType || 
+    generatedResume.content.targetJob?.locationPreference) && (
+    <div className="mb-8">
+      <h3 className="text-lg font-semibold border-b border-gray-300 dark:border-gray-600 pb-1 mb-3 text-gray-900 dark:text-white">
+        TARGET POSITION
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {generatedResume.content.targetJob?.industry && (
+          <div className="text-gray-900 dark:text-white">
+            <span className="font-medium">Industry: </span>
+            {generatedResume.content.targetJob.industry}
+          </div>
+        )}
+        {generatedResume.content.targetJob?.workType && (
+          <div className="text-gray-900 dark:text-white">
+            <span className="font-medium">Work Type: </span>
+            {generatedResume.content.targetJob.workType}
+          </div>
+        )}
+        {generatedResume.content.targetJob?.locationPreference && (
+          <div className="text-gray-900 dark:text-white">
+            <span className="font-medium">Location: </span>
+            {generatedResume.content.targetJob.locationPreference}
+          </div>
+        )}
+      </div>
+    </div>
+  )}
 
-                  {/* Skills */}
-                  {generatedResume.content.skills?.length > 0 && (
-                    <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2 mb-3">
-                        SKILLS
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {generatedResume.content.skills.map((skill, index) => (
-                          <span key={index} className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-sm">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+  {/* Professional Summary */}
+  {generatedResume.content.summary && (
+    <div className="mb-8 rounded-xl p-6 bg-white dark:bg-gray-800">
+      <h3 className="text-lg font-semibold border-b border-gray-300 dark:border-gray-600 pb-1 mb-3 text-gray-900 dark:text-white">
+        PROFESSIONAL SUMMARY
+      </h3>
+      <p className="whitespace-pre-line text-gray-900 dark:text-white">{generatedResume.content.summary}</p>
+    </div>
+  )}
 
-                  {/* Experience */}
-                  {generatedResume.content.experience?.length > 0 && (
-                    <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2 mb-3">
-                        PROFESSIONAL EXPERIENCE
-                      </h3>
-                      {generatedResume.content.experience.map((exp, index) => (
-                        <div key={index} className="mb-6">
-                          <div className="flex flex-col sm:flex-row sm:justify-between">
-                            <h4 className="font-medium text-gray-900 dark:text-white">{exp.role}</h4>
-                            {exp.duration && (
-                              <span className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-                                {exp.duration}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-600 dark:text-gray-400">
-                            {exp.company}
-                          </p>
-                          {exp.responsibilities && (
-                            <ul className="mt-2 list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                              {exp.responsibilities.split('\n').filter(Boolean).map((item, i) => (
-                                <li key={i}>{item}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Education */}
-                  {generatedResume.content.education?.length > 0 && (
-                    <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2 mb-3">
-                        EDUCATION
-                      </h3>
-                      {generatedResume.content.education.map((edu, index) => (
-                        <div key={index} className="mb-4">
-                          <div className="flex flex-col sm:flex-row sm:justify-between">
-                            <h4 className="font-medium text-gray-900 dark:text-white">{edu.degree}</h4>
-                            {edu.year && (
-                              <span className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-                                {edu.year}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-600 dark:text-gray-400">
-                            {edu.institution}
-                          </p>
-                          {edu.honors && (
-                            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                              {edu.honors}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+  {/* Skills Sections */}
+  <div className="mb-8">
+    <h3 className="text-lg font-semibold border-b border-gray-300 dark:border-gray-600 pb-1 mb-3 text-gray-900 dark:text-white">
+      SKILLS
+    </h3>
+    <div className="rounded-xl p-6 bg-white dark:bg-gray-800">
+      {/* Technical Skills */}
+      {generatedResume.content.skills?.technical?.length > 0 && (
+        <div className="mb-4">
+          <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Technical:</h4>
+          <div className="flex flex-wrap gap-2">
+            {generatedResume.content.skills.technical.map((skill, index) => (
+              <span key={index} className="px-3 py-1 bg-gradient-to-r from-indigo-400 to-purple-400 text-white dark:from-indigo-600 dark:to-purple-700 rounded-full text-sm font-medium">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Soft Skills */}
+      {generatedResume.content.skills?.soft?.length > 0 && (
+        <div className="mb-4">
+          <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Soft Skills:</h4>
+          <div className="flex flex-wrap gap-2">
+            {generatedResume.content.skills.soft.map((skill, index) => (
+              <span key={index} className="px-3 py-1 bg-gradient-to-r from-indigo-400 to-purple-400 text-white dark:from-indigo-600 dark:to-purple-700 rounded-full text-sm font-medium">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Languages */}
+      {generatedResume.content.skills?.languages?.length > 0 && (
+        <div className="mb-4">
+          <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Languages:</h4>
+          <div className="flex flex-wrap gap-2">
+            {generatedResume.content.skills.languages.map((language, index) => (
+              <span key={index} className="px-3 py-1 bg-gradient-to-r from-indigo-400 to-purple-400 text-white dark:from-indigo-600 dark:to-purple-700 rounded-full text-sm font-medium">
+                {language}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Certifications */}
+      {generatedResume.content.skills?.certifications?.length > 0 && (
+        <div>
+          <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Certifications:</h4>
+          <ul className="list-disc list-inside pl-4">
+            {generatedResume.content.skills.certifications.map((cert, index) => (
+              <li key={index} className="inline-block mb-1">
+                <span className="px-3 py-1 bg-gradient-to-r from-indigo-400 to-purple-400 text-white dark:from-indigo-600 dark:to-purple-700 rounded-full text-sm font-medium">
+                  {cert}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </div>
+  {/* Work Experience */}
+  <div className="mb-8 rounded-xl p-6 bg-white dark:bg-gray-800">
+    <h3 className="text-lg font-semibold border-b border-gray-300 dark:border-gray-600 pb-1 mb-3 text-gray-900 dark:text-white">
+      PROFESSIONAL EXPERIENCE
+    </h3>
+    {generatedResume.content.experience?.map((exp, index) => (
+      <div key={index} className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between">
+          <h4 className="font-medium text-gray-900 dark:text-white">{exp.role}</h4>
+          <span className="text-gray-600 dark:text-gray-400">{exp.duration}</span>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 italic">{exp.company}</p>
+        {exp.responsibilities && (
+          <div className="mt-2">
+            <h5 className="font-medium text-gray-900 dark:text-white">Responsibilities:</h5>
+            <ul className="list-disc list-inside pl-4 space-y-1">
+              {exp.responsibilities.split('\n').filter(Boolean).map((item, i) => (
+                <li key={i} className="text-gray-900 dark:text-white">{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {exp.achievements && (
+          <div className="mt-2">
+            <h5 className="font-medium text-gray-900 dark:text-white">Key Achievements:</h5>
+            <ul className="list-disc list-inside pl-4 space-y-1">
+              {exp.achievements.split('\n').filter(Boolean).map((item, i) => (
+                <li key={`achievement-${i}`} className="text-gray-900 dark:text-white">{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+  {/* Education */}
+  <div className="mb-8 rounded-xl p-6 bg-white dark:bg-gray-800">
+    <h3 className="text-lg font-semibold border-b border-gray-300 dark:border-gray-600 pb-1 mb-3 text-gray-900 dark:text-white">
+      EDUCATION
+    </h3>
+    {generatedResume.content.education?.map((edu, index) => (
+      <div key={index} className="mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between">
+          <h4 className="font-medium text-gray-900 dark:text-white">{edu.degree}</h4>
+          <span className="text-gray-600 dark:text-gray-400">{edu.year}</span>
+        </div>
+        <p className="italic text-gray-900 dark:text-white">{edu.institution}</p>
+        <div className="mt-1">
+          {edu.gpa && <span className="mr-4 text-gray-900 dark:text-white">GPA: {edu.gpa}</span>}
+          {edu.honors && <span className="text-gray-900 dark:text-white">Honors: {edu.honors}</span>}
+        </div>
+      </div>
+    ))}
+  </div>
+ {/* Close dropdowns when clicking outside */}
+      {(showDownloadOptions || showShareOptions) && (
+        <div 
+          className="fixed inset-0 z-0"
+          onClick={() => {
+            setShowDownloadOptions(false);
+            setShowShareOptions(false);
+          }}
+        />
+      )}
+    </div>
+  {/* Additional Sections if needed */}
+  {generatedResume.content.targetJob?.salaryExpectation && (
+    <div className="text-sm text-gray-600 dark:text-gray-400 mt-4">
+      <span className="font-medium">Salary Expectation:</span> ${generatedResume.content.targetJob.salaryExpectation}
+    </div>
+  )}
+</div>
                 </div>
 
                 {/* Action Buttons */}
@@ -432,19 +595,9 @@ export default function AIOutputPage() {
             </div>
           </div>
         </div>
-      </div>
+  
 
-      {/* Close dropdowns when clicking outside */}
-      {(showDownloadOptions || showShareOptions) && (
-        <div 
-          className="fixed inset-0 z-0"
-          onClick={() => {
-            setShowDownloadOptions(false);
-            setShowShareOptions(false);
-          }}
-        />
-      )}
-    </div>
+     
   );
 }
 

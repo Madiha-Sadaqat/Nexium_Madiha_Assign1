@@ -276,9 +276,10 @@ export default function HomePage() {
                   <Link href="/features" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     Features
                   </Link>
-                  <Link href="/templates" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                   {/* will be implemented later when extended */}
+                  {/* <Link href="/templates" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     Templates
-                  </Link>
+                  </Link> */}
                 </div>
 
                 <Link href="/signup" className="px-4 py-2 rounded-lg bg-indigo-600 dark:bg-indigo-700 text-white hover:bg-indigo-700 dark:hover:bg-indigo-800 transition-colors">

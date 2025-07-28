@@ -1,16 +1,58 @@
 "use client";
-import { useState } from "react";
+import { useContext } from "react";
 import Link from "next/link";
 import NeuralBackground from "@/components/NeuralBackground";
-import { FiFileText, FiClock, FiPlus } from "react-icons/fi";
+import { FiFileText, FiClock, FiPlus, FiSun, FiMoon, FiLogOut } from "react-icons/fi";
+import { DarkModeContext } from "../DarkModeProvider";
 
 export default function DashboardPage() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = '/';
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
       <NeuralBackground darkMode={darkMode} />
       
+ {/* Navbar */}
+      <nav className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-700/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center">
+              <FiFileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <span className="ml-2 text-xl font-semibold text-gray-900 dark:text-white">ResumeTailor</span>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {darkMode ? (
+                  <FiSun className="h-5 w-5 text-yellow-300" />
+                ) : (
+                  <FiMoon className="h-5 w-5 text-gray-700" />
+                )}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-colors ml-2"
+                aria-label="Logout"
+              >
+                <FiLogOut className="h-5 w-5" />
+              </button>
+             {/* <Link href="/templates/auth_page" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    Templates
+            </Link> */}
+            </div>
+          </div>
+        </div>
+      </nav>
+
       <div className="relative z-10 flex-1">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl shadow-2xl p-8 md:p-12">

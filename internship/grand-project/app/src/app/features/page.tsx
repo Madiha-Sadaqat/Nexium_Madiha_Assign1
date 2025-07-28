@@ -1,28 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
-import { FiFileText, FiMoon, FiSun, FiHome, FiUser, FiAward, FiBriefcase, FiEdit3, FiZap, FiArrowRight } from "react-icons/fi";
+import { useContext } from "react";
+import { DarkModeContext } from "../DarkModeProvider";
+import { FiFileText, FiMoon, FiSun, FiHome, FiUser, FiAward, FiBriefcase, FiEdit3, FiZap, FiArrowRight, FiLogOut } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import NeuralBackground from "@/components/NeuralBackground";
 
 export default function FeaturesPage() {
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Dark mode initialization
-  useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setDarkMode(savedMode ? JSON.parse(savedMode) : systemPrefersDark);
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
+  const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = '/';
+  };
 
   const features = [
     {
@@ -88,6 +77,13 @@ export default function FeaturesPage() {
                   className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none"
                 >
                   {darkMode ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-colors ml-2"
+                  aria-label="Logout"
+                >
+                  <FiLogOut className="h-5 w-5" />
                 </button>
                 <Link
                   href="/"

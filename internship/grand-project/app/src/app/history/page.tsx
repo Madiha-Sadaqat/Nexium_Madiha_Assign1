@@ -1,29 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useContext } from "react";
+import { DarkModeContext } from "../DarkModeProvider";
 import { useRouter } from "next/navigation";
 import NeuralBackground from "@/components/NeuralBackground";
-import { FiFileText, FiTrash2, FiEye, FiClock, FiSun, FiMoon, FiHome } from "react-icons/fi";
+import { FiFileText, FiTrash2, FiEye, FiClock, FiSun, FiMoon, FiHome, FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 
 export default function HistoryPage() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
   const router = useRouter();
-
-  // Dark mode initialization
-  useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setDarkMode(savedMode ? JSON.parse(savedMode) : systemPrefersDark);
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = '/';
+  };
 
   // Sample resume history data
   const resumeHistory = [
@@ -63,6 +52,13 @@ export default function HistoryPage() {
               >
                 <FiHome className="mr-1" /> Home
               </Link>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-colors ml-2"
+                aria-label="Logout"
+              >
+                <FiLogOut className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
