@@ -270,10 +270,12 @@ const [formData, setFormData] = useState<FormData>(() => {
   }, 500);
 };
 
-const handleTailorResume = () => {
+const handleTailorResume = async () => {
   setIsSaving(true);
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(CURRENT_RESUME_KEY, JSON.stringify({
+  
+  try {
+    // Create resume data object
+    const resumeData = {
       title: formData.target.jobTitle,
       date: new Date().toLocaleDateString(),
       content: {
@@ -311,9 +313,46 @@ const handleTailorResume = () => {
           workType: formData.target.workType
         }
       }
-    }));
+    };
+
+    // Save to localStorage for immediate use
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(CURRENT_RESUME_KEY, JSON.stringify(resumeData));
+    }
+
+    // Save to API (you'll need to get user_id from auth later)
+    const user_id = 'temp-user-id'; // Replace with actual user ID from auth
+    const resume_text = JSON.stringify(resumeData);
+    
+    const response = await fetch('/api/saveResume', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id,
+        resume_text
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('Resume saved successfully:', result);
+      // Store the resume ID for later use
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('current_resume_id', result.supabase_id);
+      }
+    } else {
+      console.error('Failed to save resume:', result.error);
+    }
+
+  } catch (error) {
+    console.error('Error saving resume:', error);
+  } finally {
+    setIsSaving(false);
+    router.push('/output-page');
   }
-  router.push('/output-page');
 };
 
   function handleNext() {
