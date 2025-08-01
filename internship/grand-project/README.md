@@ -78,6 +78,31 @@ A modern, AI-powered web application for creating and tailoring professional res
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
+## 🎬 Live Demo & Walkthrough
+
+### 📹 Application Walkthrough
+Watch a complete demonstration of the AI-Powered Resume Tailor in action:
+
+[![Resume Tailor Demo](https://img.shields.io/badge/Watch%20Demo-Loom%20Video-blue?style=for-the-badge&logo=loom)](https://www.loom.com/share/your-video-id-here)
+
+**Demo Features Covered:**
+- 🔐 Magic Link Authentication
+- 📝 Multi-section Resume Builder
+- 🤖 AI-Powered Resume Tailoring
+- 📄 PDF/DOCX Export
+- 📱 Mobile Responsive Design
+- 🌙 Dark/Light Theme Toggle
+
+### 🌐 Live Application
+**Production URL**: https://resume-tailor-ecru.vercel.app
+
+**Try it yourself:**
+1. Visit the live application
+2. Sign in with your email (magic link)
+3. Create your first resume
+4. Experience AI-powered tailoring
+5. Export your professional resume
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -404,6 +429,80 @@ npx tsc --noEmit
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## 📹 Creating Your Own Loom Walkthrough
+
+### How to Record a Demo Video
+
+1. **Sign up for Loom** (free at [loom.com](https://www.loom.com))
+2. **Install the Loom extension** for your browser
+3. **Prepare your demo script**:
+   - Authentication flow
+   - Resume creation process
+   - AI tailoring demonstration
+   - Export functionality
+   - Mobile responsiveness
+   - Theme toggle
+
+4. **Record your screen**:
+   - Start with the login page
+   - Show the magic link process
+   - Walk through resume creation
+   - Demonstrate AI tailoring
+   - Show PDF/DOCX export
+   - Test mobile view
+   - Toggle dark/light theme
+
+5. **Add voice narration** explaining each feature
+6. **Edit and trim** the video if needed
+7. **Share the Loom link** in your README
+
+### Demo Script Template
+
+```
+🎬 Demo Script (5-7 minutes):
+
+1. Introduction (30s)
+   - "Welcome to the AI-Powered Resume Tailor"
+   - "Built with Next.js, TypeScript, and OpenAI"
+
+2. Authentication (1m)
+   - Show login page
+   - Enter email address
+   - Demonstrate magic link process
+   - Show dashboard after login
+
+3. Resume Creation (2m)
+   - Navigate to resume input
+   - Fill out personal information
+   - Add work experience
+   - Add education
+   - Add skills and certifications
+   - Show progress tracking
+
+4. AI Tailoring (1.5m)
+   - Click "AI Tailor Resume"
+   - Configure job requirements
+   - Show AI processing
+   - Display tailored results
+   - Compare before/after
+
+5. Export & History (1m)
+   - Generate PDF resume
+   - Generate DOCX resume
+   - Show history page
+   - Demonstrate version tracking
+
+6. Mobile & Theme (30s)
+   - Show mobile responsive design
+   - Toggle dark/light theme
+   - Highlight responsive features
+
+7. Conclusion (30s)
+   - Summarize key features
+   - Mention tech stack
+   - Call to action
+```
 
 ## 📄 License
 
