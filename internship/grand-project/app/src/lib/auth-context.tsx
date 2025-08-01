@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './supabaseClient';
+import { config } from './config';
 
 interface AuthContextType {
   user: User | null;
@@ -43,17 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string) => {
-    // Use Vercel URL for production, localhost for development
-    const redirectUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://resume-tailor-ecru.vercel.app/auth/callback'
-      : `${window.location.origin}/auth/callback`;
-    
-    console.log('Using redirect URL:', redirectUrl);
+    console.log('Using auth callback URL:', config.authCallbackUrl);
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: config.authCallbackUrl,
       },
     });
     return { error };

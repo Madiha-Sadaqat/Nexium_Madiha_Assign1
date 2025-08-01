@@ -1,5 +1,5 @@
 // Test script for API endpoints
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://resume-tailor-ecru.vercel.app/api';
 
 async function testAPI() {
   console.log('🧪 Testing API endpoints...\n');
