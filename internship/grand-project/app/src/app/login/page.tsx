@@ -1,7 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+
 import { FiMail, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
 import NeuralBackground from '@/components/NeuralBackground';
 import { DarkModeContext } from '../DarkModeProvider';

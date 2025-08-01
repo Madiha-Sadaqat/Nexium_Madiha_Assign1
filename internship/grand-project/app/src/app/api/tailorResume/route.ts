@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         },
         
         // Enhance experience descriptions with job-specific improvements
-        experience: resumeData.content.experience?.map((exp: { role: string; company: string; responsibilities: string; achievements: string }, _index: number) => {
+        experience: resumeData.content.experience?.map((exp: { role: string; company: string; responsibilities: string; achievements: string }) => {
           let enhancedResponsibilities = exp.responsibilities || '';
           let enhancedAchievements = exp.achievements || '';
           

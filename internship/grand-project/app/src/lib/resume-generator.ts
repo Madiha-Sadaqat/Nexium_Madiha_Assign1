@@ -1,7 +1,39 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
-export const generateResumePDF = async (resumeData: any) => {
+interface ResumeData {
+  content: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    linkedin?: string;
+    portfolio?: string;
+    summary?: string;
+    skills: {
+      technical?: string[];
+      soft?: string[];
+      languages?: string[];
+      certifications?: string[];
+    };
+    experience?: Array<{
+      role?: string;
+      company?: string;
+      duration?: string;
+      responsibilities?: string;
+      achievements?: string;
+    }>;
+    education?: Array<{
+      degree?: string;
+      institution?: string;
+      year?: string;
+      gpa?: string;
+      honors?: string;
+    }>;
+  };
+  title?: string;
+}
+
+export const generateResumePDF = async (resumeData: ResumeData) => {
   try {
     const pdfDoc = await PDFDocument.create();
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -98,8 +130,8 @@ export const generateResumePDF = async (resumeData: any) => {
     // Experience
     page.drawText('PROFESSIONAL EXPERIENCE', { x: left, y, size: 13, font, color: rgb(0.2,0.2,0.2) });
     y -= lineHeight;
-    resumeData.content.experience.forEach((exp: any) => {
-      page.drawText(exp.role, { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
+    resumeData.content.experience?.forEach((exp: { role?: string; company?: string; duration?: string; responsibilities?: string; achievements?: string }) => {
+      page.drawText(exp.role || '', { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
       y -= lineHeight;
       page.drawText(`${exp.company} • ${exp.duration}`, { x: left + 10, y, size: 10, font, color: rgb(0.4,0.4,0.4) });
       y -= lineHeight;
@@ -129,8 +161,8 @@ export const generateResumePDF = async (resumeData: any) => {
     // Education
     page.drawText('EDUCATION', { x: left, y, size: 13, font, color: rgb(0.2,0.2,0.2) });
     y -= lineHeight;
-    resumeData.content.education.forEach((edu: any) => {
-      page.drawText(edu.degree, { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
+    resumeData.content.education?.forEach((edu: { degree?: string; institution?: string; year?: string; gpa?: string; honors?: string }) => {
+      page.drawText(edu.degree || '', { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
       y -= lineHeight;
       page.drawText(`${edu.institution} • ${edu.year}`, { x: left + 10, y, size: 10, font, color: rgb(0.4,0.4,0.4) });
       y -= lineHeight;
@@ -164,7 +196,7 @@ export const generateResumePDF = async (resumeData: any) => {
   }
 };
 
-export const generateResumeDOCX = async (resumeData: any) => {
+export const generateResumeDOCX = async (resumeData: ResumeData) => {
   try {
     const doc = new Document({
       title: `${resumeData.content.name || 'My'} Resume`,
