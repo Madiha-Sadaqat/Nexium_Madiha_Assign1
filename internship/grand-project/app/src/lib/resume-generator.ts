@@ -44,7 +44,6 @@ export const generateResumePDF = async (resumeData: ResumeData) => {
     let y = 750;
     const left = 50;
     const lineHeight = 18;
-    const sectionGap = 28;
 
     // Header: Name
     page.drawText(resumeData.content.name || 'JOHN DOE', {
@@ -275,7 +274,7 @@ export const generateResumeDOCX = async (resumeData: ResumeData) => {
             heading: HeadingLevel.HEADING_2,
             children: [new TextRun({ text: 'PROFESSIONAL EXPERIENCE', bold: true })]
           }),
-          ...resumeData.content.experience.flatMap((exp: any) => [
+          ...(resumeData.content.experience?.flatMap((exp: { role?: string; company?: string; duration?: string; responsibilities?: string; achievements?: string }) => [
             new Paragraph({ children: [new TextRun({ text: exp.role, bold: true })] }),
             new Paragraph({ children: [new TextRun({ text: `${exp.company} • ${exp.duration}`, italics: true })] }),
             ...(exp.responsibilities ? [
@@ -287,19 +286,19 @@ export const generateResumeDOCX = async (resumeData: ResumeData) => {
               ...exp.achievements.split('\n').map((item: string) => new Paragraph({ children: [new TextRun({ text: `- ${item.trim()}` })] })),
             ] : []),
             new Paragraph({ text: '' })
-          ]),
+          ]) || []),
           // Education
             new Paragraph({
             heading: HeadingLevel.HEADING_2,
             children: [new TextRun({ text: 'EDUCATION', bold: true })]
           }),
-          ...resumeData.content.education.flatMap((edu: any) => [
+          ...(resumeData.content.education?.flatMap((edu: { degree?: string; institution?: string; year?: string; gpa?: string; honors?: string }) => [
             new Paragraph({ children: [new TextRun({ text: edu.degree, bold: true })] }),
             new Paragraph({ children: [new TextRun({ text: `${edu.institution} • ${edu.year}`, italics: true })] }),
             ...(edu.gpa ? [new Paragraph({ children: [new TextRun({ text: `GPA: ${edu.gpa}` })] })] : []),
             ...(edu.honors ? [new Paragraph({ children: [new TextRun({ text: `Honors: ${edu.honors}` })] })] : []),
             new Paragraph({ text: '' })
-          ]),
+          ]) || []),
 
         ]
       }]
