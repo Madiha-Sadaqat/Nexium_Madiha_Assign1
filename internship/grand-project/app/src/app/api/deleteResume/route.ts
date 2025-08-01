@@ -14,9 +14,9 @@ const client = new MongoClient(process.env.MONGODB_URI!);
 async function connectToMongoDB() {
   try {
     await client.connect();
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If already connected, ignore the error
-    if (error.message !== 'MongoClient is already connected') {
+    if (error instanceof Error && error.message !== 'MongoClient is already connected') {
       throw error;
     }
   }

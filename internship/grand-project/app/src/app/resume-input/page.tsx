@@ -4,28 +4,23 @@ import { useRouter } from "next/navigation";
 import NeuralBackground from "@/components/NeuralBackground";
 import Link from "next/link";
 import {
-  FiUpload,
   FiHome,
   FiUser,
   FiBriefcase,
   FiBook,
   FiCode,
-  FiTarget,
   FiMoon,
   FiSun,
   FiArrowRight,
   FiArrowLeft,
   FiFileText,
   FiLogOut,
-  FiZap,
 } from "react-icons/fi";
-import { motion } from "framer-motion";
 import { DarkModeContext } from "../DarkModeProvider";
 import { useAuth } from "@/lib/auth-context";
 
 // Constants for localStorage keys
 const RESUME_DRAFT_KEY = 'resumeDraft';
-const CURRENT_RESUME_KEY = 'currentResume';
 
 // Add types for formData and related state
 interface Experience {
@@ -84,58 +79,6 @@ export default function ResumeInputPage() {
     requirements: [] as string[]
   });
 
-  // Helper function to generate job description from form data
-  const generateJobDescription = (formData: any) => {
-    const parts = [];
-    
-    if (formData.experienceLevel) {
-      parts.push(`${formData.experienceLevel} developer`);
-    }
-    
-    if (formData.technologies.length > 0) {
-      parts.push(`with expertise in ${formData.technologies.join(', ')}`);
-    }
-    
-    if (formData.softSkills.length > 0) {
-      parts.push(`Strong ${formData.softSkills.join(', ')} skills`);
-    }
-    
-    if (formData.industry) {
-      parts.push(`in ${formData.industry} industry`);
-    }
-    
-    if (formData.workType) {
-      parts.push(`${formData.workType} position`);
-    }
-    
-    if (formData.requirements.length > 0) {
-      parts.push(`Experience with ${formData.requirements.join(', ')} preferred`);
-    }
-    
-    return parts.join('. ') + '.';
-  };
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!user) {
-    return null;
-  }
-
   // Initialize form with all fields
   const initialFormData = {
     personal: {
@@ -173,44 +116,42 @@ export default function ResumeInputPage() {
   };
 
   // Draft loading is handled in the useState initializer below
-
-const [formData, setFormData] = useState<FormData>(() => {
-  if (typeof window !== 'undefined') {
-    try {
-      const savedDraft = localStorage.getItem('resumeDraft');
-      console.log('Loading resume draft from localStorage:', savedDraft);
-      if (savedDraft) {
-        const parsedData = JSON.parse(savedDraft);
-        console.log('Parsed resume draft data:', parsedData);
-        
-        // Safely merge saved data with initial structure
-        return {
-          personal: { ...initialFormData.personal, ...(parsedData.personal || {}) },
-          experience: parsedData.experience?.length 
-            ? parsedData.experience.map((exp: any) => ({
-                ...initialFormData.experience[0],
-                ...exp
-              }))
-            : initialFormData.experience,
-          education: parsedData.education?.length
-            ? parsedData.education.map((edu: any) => ({
-                ...initialFormData.education[0],
-                ...edu
-              }))
-            : initialFormData.education,
-          skills: { ...initialFormData.skills, ...(parsedData.skills || {}) }
-        };
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedDraft = localStorage.getItem('resumeDraft');
+        console.log('Loading resume draft from localStorage:', savedDraft);
+        if (savedDraft) {
+          const parsedData = JSON.parse(savedDraft);
+          console.log('Parsed resume draft data:', parsedData);
+          
+          // Safely merge saved data with initial structure
+          return {
+            personal: { ...initialFormData.personal, ...(parsedData.personal || {}) },
+            experience: parsedData.experience?.length 
+              ? parsedData.experience.map((exp: Experience) => ({
+                  ...initialFormData.experience[0],
+                  ...exp
+                }))
+              : initialFormData.experience,
+            education: parsedData.education?.length
+              ? parsedData.education.map((edu: Education) => ({
+                  ...initialFormData.education[0],
+                  ...edu
+                }))
+              : initialFormData.education,
+            skills: { ...initialFormData.skills, ...(parsedData.skills || {}) }
+          };
+        }
+      } catch (error) {
+        console.error('Error loading draft:', error);
+        // If error occurs, return clean initial form
+        return initialFormData;
       }
-    } catch (error) {
-      console.error('Error loading draft:', error);
-      // If error occurs, return clean initial form
-      return initialFormData;
     }
-  }
-  // Default case - return initial empty form
-  return initialFormData;
-});
-
+    // Default case - return initial empty form
+    return initialFormData;
+  });
 
   const sections = [
     { id: "personal", icon: FiUser, label: "Personal Info" },
@@ -223,6 +164,44 @@ const [formData, setFormData] = useState<FormData>(() => {
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [isClient, setIsClient] = useState(false);
 
+  // Helper function to generate job description from form data
+  const generateJobDescription = (formData: typeof jobDescriptionForm) => {
+    const parts = [];
+    
+    if (formData.experienceLevel) {
+      parts.push(`${formData.experienceLevel} developer`);
+    }
+    
+    if (formData.technologies.length > 0) {
+      parts.push(`with expertise in ${formData.technologies.join(', ')}`);
+    }
+    
+    if (formData.softSkills.length > 0) {
+      parts.push(`Strong ${formData.softSkills.join(', ')} skills`);
+    }
+    
+    if (formData.industry) {
+      parts.push(`in ${formData.industry} industry`);
+    }
+    
+    if (formData.workType) {
+      parts.push(`${formData.workType} position`);
+    }
+    
+    if (formData.requirements.length > 0) {
+      parts.push(`Experience with ${formData.requirements.join(', ')} preferred`);
+    }
+    
+    return parts.join('. ') + '.';
+  };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -231,7 +210,7 @@ const [formData, setFormData] = useState<FormData>(() => {
     if (!isClient) return;
     
     const percentage = Math.round(
-      (Object.entries(formData).filter(([key, section]) => {
+      (Object.entries(formData).filter(([, section]) => {
         if (Array.isArray(section)) {
           return section.length > 0 &&
             section.every((exp) => Object.values(exp).some(Boolean));
@@ -243,7 +222,21 @@ const [formData, setFormData] = useState<FormData>(() => {
         100
     );
     setCompletionPercentage(percentage);
-  }, [formData, isClient]);
+  }, [formData, isClient, sections.length]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -255,8 +248,8 @@ const [formData, setFormData] = useState<FormData>(() => {
     if (index !== undefined) {
       setFormData((prev) => ({
         ...prev,
-        [section]: (prev[section as keyof typeof formData] as any[]).map(
-          (item: any, i: number) =>
+        [section]: (prev[section as keyof typeof formData] as Experience[] | Education[]).map(
+          (item: Experience | Education, i: number) =>
             i === index ? { ...item, [name]: value } : item
         ),
       }));
@@ -306,8 +299,8 @@ const [formData, setFormData] = useState<FormData>(() => {
   const removeItem = (section: string, index: number) => {
     setFormData((prev) => ({
       ...prev,
-      [section]: (prev[section as keyof typeof formData] as any[]).filter(
-        (_: any, i: number) => i !== index
+      [section]: (prev[section as keyof typeof formData] as Experience[] | Education[]).filter(
+        (_: Experience | Education, i: number) => i !== index
       ),
     }));
   };
@@ -369,7 +362,7 @@ const handleTailorResume = async () => {
 
     // Save to localStorage for immediate use
     if (typeof window !== 'undefined') {
-      localStorage.setItem(CURRENT_RESUME_KEY, JSON.stringify(resumeData));
+      localStorage.setItem('currentResume', JSON.stringify(resumeData));
     }
 
     // Save to API using authenticated user
@@ -724,8 +717,8 @@ const handleAITailorResume = async () => {
                       <option value="">Select Degree</option>
                       <option value="High School">High School</option>
                       <option value="Associate">Associate</option>
-                      <option value="Bachelor's">Bachelor's</option>
-                      <option value="Master's">Master's</option>
+                      <option value="Bachelor&apos;s">Bachelor&apos;s</option>
+                      <option value="Master&apos;s">Master&apos;s</option>
                       <option value="PhD">PhD</option>
                       <option value="Other">Other</option>
                     </select>

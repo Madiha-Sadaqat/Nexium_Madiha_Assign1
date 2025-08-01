@@ -106,7 +106,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                We'll send you a magic link to sign in securely
+                We&apos;ll send you a magic link to sign in securely
               </p>
             </div>
           </div>
