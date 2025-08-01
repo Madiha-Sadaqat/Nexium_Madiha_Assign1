@@ -83,7 +83,7 @@ A modern, AI-powered web application for creating and tailoring professional res
 ### 📹 Application Walkthrough
 Watch a complete demonstration of the AI-Powered Resume Tailor in action:
 
-[![Resume Tailor Demo](https://img.shields.io/badge/Watch%20Demo-Loom%20Video-blue?style=for-the-badge&logo=loom)](https://www.loom.com/share/your-video-id-here)
+[![Resume Tailor Demo](https://img.shields.io/badge/Watch%20Demo-Loom%20Video-blue?style=for-the-badge&logo=loom)](https://www.loom.com/share/7e94931daeda4d9490e976d3ae3dbc75?sid=2f7f27ef-7063-41e4-8c77-b903e4f4ba54)
 
 **Demo Features Covered:**
 - 🔐 Magic Link Authentication
