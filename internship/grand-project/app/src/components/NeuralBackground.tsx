@@ -14,6 +14,11 @@ export default function NeuralBackground({ darkMode }: { darkMode: boolean }) {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    // Store canvas and ctx in variables that TypeScript knows are non-null
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const context = ctx;
+
     class Node {
       x: number;
       y: number;
@@ -22,8 +27,8 @@ export default function NeuralBackground({ darkMode }: { darkMode: boolean }) {
       vy: number;
       
       constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+        this.x = Math.random() * canvasWidth;
+        this.y = Math.random() * canvasHeight;
         this.radius = 2 + Math.random() * 2;
         this.vx = -0.5 + Math.random();
         this.vy = -0.5 + Math.random();
@@ -32,15 +37,15 @@ export default function NeuralBackground({ darkMode }: { darkMode: boolean }) {
       update() {
         this.x += this.vx;
         this.y += this.vy;
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        if (this.x < 0 || this.x > canvasWidth) this.vx *= -1;
+        if (this.y < 0 || this.y > canvasHeight) this.vy *= -1;
       }
       
       draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = darkMode ? 'rgba(165, 180, 252, 0.8)' : 'rgba(99, 102, 241, 0.8)';
-        ctx.fill();
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        context.fillStyle = darkMode ? 'rgba(165, 180, 252, 0.8)' : 'rgba(99, 102, 241, 0.8)';
+        context.fill();
       }
     }
 
@@ -59,12 +64,12 @@ export default function NeuralBackground({ darkMode }: { darkMode: boolean }) {
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist < 150) {
-          ctx.beginPath();
-          ctx.moveTo(this.node1.x, this.node1.y);
-          ctx.lineTo(this.node2.x, this.node2.y);
-          ctx.strokeStyle = darkMode ? `rgba(165, 180, 252, ${1 - dist/150})` : `rgba(99, 102, 241, ${1 - dist/150})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
+          context.beginPath();
+          context.moveTo(this.node1.x, this.node1.y);
+          context.lineTo(this.node2.x, this.node2.y);
+          context.strokeStyle = darkMode ? `rgba(165, 180, 252, ${1 - dist/150})` : `rgba(99, 102, 241, ${1 - dist/150})`;
+          context.lineWidth = 0.8;
+          context.stroke();
         }
       }
     }
@@ -80,7 +85,7 @@ export default function NeuralBackground({ darkMode }: { darkMode: boolean }) {
 
     let animationId: number;
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
       connections.forEach(conn => conn.draw());
       nodes.forEach(node => {
         node.update();
