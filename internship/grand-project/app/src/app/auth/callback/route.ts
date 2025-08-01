@@ -8,12 +8,14 @@ export async function GET(request: NextRequest) {
   if (code) {
     try {
       await supabase.auth.exchangeCodeForSession(code);
+      // URL to redirect to after sign in process completes
+      return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
     } catch (error) {
       console.error('Auth callback error:', error);
       return NextResponse.redirect(new URL('/login?error=auth_failed', requestUrl.origin));
     }
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+  // If no code, redirect to home page
+  return NextResponse.redirect(new URL('/', requestUrl.origin));
 } 
