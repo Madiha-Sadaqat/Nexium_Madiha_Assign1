@@ -8,7 +8,7 @@ export const generateResumePDF = async (resumeData: any) => {
     const page = pdfDoc.addPage([600, 800]);
     pdfDoc.setTitle(`${resumeData.content.name || 'My'} Resume`);
     pdfDoc.setAuthor(resumeData.content.name || '');
-
+    
     let y = 750;
     const left = 50;
     const lineHeight = 18;
@@ -44,30 +44,13 @@ export const generateResumePDF = async (resumeData: any) => {
         x: left,
         y,
         size: 10,
-        font,
-        color: rgb(0.2, 0.2, 0.2),
-      });
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
       y -= lineHeight;
     }
     y -= 10;
-    // Target Position
-    if (resumeData.content.targetJob && (resumeData.content.targetJob.industry || resumeData.content.targetJob.workType || resumeData.content.targetJob.locationPreference)) {
-      page.drawText('TARGET POSITION', { x: left, y, size: 13, font, color: rgb(0.2,0.2,0.2) });
-      y -= lineHeight;
-      if (resumeData.content.targetJob.industry) {
-        page.drawText(`Industry: ${resumeData.content.targetJob.industry}`, { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
-        y -= lineHeight;
-      }
-      if (resumeData.content.targetJob.workType) {
-        page.drawText(`Work Type: ${resumeData.content.targetJob.workType}`, { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
-        y -= lineHeight;
-      }
-      if (resumeData.content.targetJob.locationPreference) {
-        page.drawText(`Location: ${resumeData.content.targetJob.locationPreference}`, { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
-        y -= lineHeight;
-      }
-      y -= 10;
-    }
+
     // Professional Summary
     if (resumeData.content.summary) {
       page.drawText('PROFESSIONAL SUMMARY', { x: left, y, size: 13, font, color: rgb(0.2,0.2,0.2) });
@@ -162,11 +145,7 @@ export const generateResumePDF = async (resumeData: any) => {
       y -= 8;
     });
     y -= 10;
-    // Salary Expectation
-    if (resumeData.content.targetJob?.salaryExpectation) {
-      page.drawText(`Salary Expectation: $${resumeData.content.targetJob.salaryExpectation}`, { x: left, y, size: 11, font, color: rgb(0.2,0.2,0.2) });
-      y -= lineHeight;
-    }
+    
     // Serialize the PDF
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -227,18 +206,7 @@ export const generateResumeDOCX = async (resumeData: any) => {
             ]
           }),
           new Paragraph({ text: '' }),
-          // Target Position
-          ...(resumeData.content.targetJob && (resumeData.content.targetJob.industry || resumeData.content.targetJob.workType || resumeData.content.targetJob.locationPreference)
-            ? [
-                new Paragraph({
-                  heading: HeadingLevel.HEADING_2,
-                  children: [new TextRun({ text: 'TARGET POSITION', bold: true })]
-                }),
-                ...(resumeData.content.targetJob.industry ? [new Paragraph({ children: [new TextRun({ text: `Industry: ${resumeData.content.targetJob.industry}` })] })] : []),
-                ...(resumeData.content.targetJob.workType ? [new Paragraph({ children: [new TextRun({ text: `Work Type: ${resumeData.content.targetJob.workType}` })] })] : []),
-                ...(resumeData.content.targetJob.locationPreference ? [new Paragraph({ children: [new TextRun({ text: `Location: ${resumeData.content.targetJob.locationPreference}` })] })] : []),
-                new Paragraph({ text: '' })
-              ] : []),
+          
           // Professional Summary
           ...(resumeData.content.summary ? [
             new Paragraph({
@@ -289,7 +257,7 @@ export const generateResumeDOCX = async (resumeData: any) => {
             new Paragraph({ text: '' })
           ]),
           // Education
-          new Paragraph({
+            new Paragraph({
             heading: HeadingLevel.HEADING_2,
             children: [new TextRun({ text: 'EDUCATION', bold: true })]
           }),
@@ -300,10 +268,7 @@ export const generateResumeDOCX = async (resumeData: any) => {
             ...(edu.honors ? [new Paragraph({ children: [new TextRun({ text: `Honors: ${edu.honors}` })] })] : []),
             new Paragraph({ text: '' })
           ]),
-          // Salary Expectation
-          ...(resumeData.content.targetJob?.salaryExpectation ? [
-            new Paragraph({ children: [new TextRun({ text: `Salary Expectation: $${resumeData.content.targetJob.salaryExpectation}` })] })
-          ] : [])
+
         ]
       }]
     });

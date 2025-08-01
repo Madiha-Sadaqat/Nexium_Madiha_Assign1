@@ -1,13 +1,39 @@
 "use client";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { DarkModeContext } from "../DarkModeProvider";
 import { FiFileText, FiMoon, FiSun, FiHome, FiUser, FiAward, FiBriefcase, FiEdit3, FiZap, FiArrowRight, FiLogOut } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import NeuralBackground from "@/components/NeuralBackground";
+import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function FeaturesPage() {
   const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
+
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = '/';

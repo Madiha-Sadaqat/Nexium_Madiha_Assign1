@@ -1,0 +1,140 @@
+{
+  "name": "AI Resume Tailor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tailor-resume",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "tailor-resume-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from webhook\nconst { resumeData, jobDescription } = $input.first().json;\n\n// Validate required fields\nif (!resumeData || !jobDescription) {\n  throw new Error('resumeData and jobDescription are required');\n}\n\n// Prepare data for AI processing\nreturn {\n  json: {\n    resumeData,\n    jobDescription,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "data-processor",
+      "name": "Data Processor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeType": "chat",
+        "model": "gpt-3.5-turbo",
+        "messages": {
+          "messageValues": [
+            {
+              "role": "system",
+              "content": "You are an expert resume writer and career coach. Your task is to tailor a resume to match a specific job description. Analyze the job requirements and modify the resume to highlight relevant skills, experiences, and achievements that align with the position. Focus on:\n\n1. Keyword matching from the job description\n2. Quantifiable achievements\n3. Relevant skills and experiences\n4. Professional language and formatting\n5. ATS (Applicant Tracking System) optimization\n\nReturn the tailored resume in JSON format with the same structure as the original resume data."
+            },
+            {
+              "role": "user",
+              "content": "Job Description:\n{{ $json.jobDescription }}\n\nOriginal Resume Data:\n{{ JSON.stringify($json.resumeData, null, 2) }}\n\nPlease tailor this resume to match the job description. Return the tailored resume data in the same JSON structure."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 4000
+        }
+      },
+      "id": "ai-processor",
+      "name": "AI Resume Tailor",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI response and validate\nconst aiResponse = $input.first().json;\n\n// Extract the tailored resume from AI response\nlet tailoredResume;\ntry {\n  // Try to parse JSON from AI response\n  const responseText = aiResponse.choices[0].message.content;\n  tailoredResume = JSON.parse(responseText);\n} catch (error) {\n  // If parsing fails, create a structured response\n  tailoredResume = {\n    original: $('Data Processor').item.json.resumeData,\n    tailored: aiResponse.choices[0].message.content,\n    timestamp: new Date().toISOString()\n  };\n}\n\nreturn {\n  json: {\n    success: true,\n    tailoredResume,\n    originalResume: $('Data Processor').item.json.resumeData,\n    jobDescription: $('Data Processor').item.json.jobDescription,\n    processingTime: new Date().toISOString()\n  }\n};"
+      },
+      "id": "response-formatter",
+      "name": "Response Formatter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Data Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Processor": {
+      "main": [
+        [
+          {
+            "node": "AI Resume Tailor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Resume Tailor": {
+      "main": [
+        [
+          {
+            "node": "Response Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response Formatter": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+} 

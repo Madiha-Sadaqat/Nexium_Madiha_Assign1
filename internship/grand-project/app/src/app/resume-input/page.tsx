@@ -17,9 +17,11 @@ import {
   FiArrowLeft,
   FiFileText,
   FiLogOut,
+  FiZap,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { DarkModeContext } from "../DarkModeProvider";
+import { useAuth } from "@/lib/auth-context";
 
 // Constants for localStorage keys
 const RESUME_DRAFT_KEY = 'resumeDraft';
@@ -46,14 +48,7 @@ interface Skills {
   languages: string;
   certifications: string;
 }
-interface Target {
-  jobTitle: string;
-  industry: string;
-  salaryExpectation: string;
-  locationPreference: string;
-  workType: string;
-  additionalPreferences: string;
-}
+
 interface Personal {
   fullName: string;
   email: string;
@@ -67,14 +62,79 @@ interface FormData {
   experience: Experience[];
   education: Education[];
   skills: Skills;
-  target: Target;
 }
 
 export default function ResumeInputPage() {
   const { darkMode, setDarkMode } = useContext(DarkModeContext) as { darkMode: boolean, setDarkMode: (v: boolean) => void };
+  const { user, loading: authLoading } = useAuth();
   const [activeSection, setActiveSection] = useState("personal");
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [isTailoring, setIsTailoring] = useState(false);
+  const [jobDescription, setJobDescription] = useState('');
+  const [showJobDescriptionModal, setShowJobDescriptionModal] = useState(false);
+  
+  // Structured job description state
+  const [jobDescriptionForm, setJobDescriptionForm] = useState({
+    experienceLevel: '',
+    technologies: [] as string[],
+    softSkills: [] as string[],
+    industry: '',
+    workType: '',
+    requirements: [] as string[]
+  });
+
+  // Helper function to generate job description from form data
+  const generateJobDescription = (formData: any) => {
+    const parts = [];
+    
+    if (formData.experienceLevel) {
+      parts.push(`${formData.experienceLevel} developer`);
+    }
+    
+    if (formData.technologies.length > 0) {
+      parts.push(`with expertise in ${formData.technologies.join(', ')}`);
+    }
+    
+    if (formData.softSkills.length > 0) {
+      parts.push(`Strong ${formData.softSkills.join(', ')} skills`);
+    }
+    
+    if (formData.industry) {
+      parts.push(`in ${formData.industry} industry`);
+    }
+    
+    if (formData.workType) {
+      parts.push(`${formData.workType} position`);
+    }
+    
+    if (formData.requirements.length > 0) {
+      parts.push(`Experience with ${formData.requirements.join(', ')} preferred`);
+    }
+    
+    return parts.join('. ') + '.';
+  };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   // Initialize form with all fields
   const initialFormData = {
@@ -110,32 +170,18 @@ export default function ResumeInputPage() {
       languages: "",
       certifications: "",
     },
-    target: {
-      jobTitle: "",
-      industry: "",
-      salaryExpectation: "",
-      locationPreference: "",
-      workType: "",
-      additionalPreferences: "",
-    },
   };
 
-  // Load draft if exists
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedDraft = localStorage.getItem("resumeDraft");
-      if (savedDraft) {
-        setFormData(JSON.parse(savedDraft));
-      }
-    }
-  }, []);
+  // Draft loading is handled in the useState initializer below
 
 const [formData, setFormData] = useState<FormData>(() => {
   if (typeof window !== 'undefined') {
     try {
       const savedDraft = localStorage.getItem('resumeDraft');
+      console.log('Loading resume draft from localStorage:', savedDraft);
       if (savedDraft) {
         const parsedData = JSON.parse(savedDraft);
+        console.log('Parsed resume draft data:', parsedData);
         
         // Safely merge saved data with initial structure
         return {
@@ -152,8 +198,7 @@ const [formData, setFormData] = useState<FormData>(() => {
                 ...edu
               }))
             : initialFormData.education,
-          skills: { ...initialFormData.skills, ...(parsedData.skills || {}) },
-          target: { ...initialFormData.target, ...(parsedData.target || {}) }
+          skills: { ...initialFormData.skills, ...(parsedData.skills || {}) }
         };
       }
     } catch (error) {
@@ -172,23 +217,36 @@ const [formData, setFormData] = useState<FormData>(() => {
     { id: "experience", icon: FiBriefcase, label: "Experience" },
     { id: "education", icon: FiBook, label: "Education" },
     { id: "skills", icon: FiCode, label: "Skills" },
-    { id: "target", icon: FiTarget, label: "Target Job" },
   ];
 
-  // Calculate completion percentage
-  const completionPercentage = Math.round(
-    (Object.values(formData).filter((section) =>
-      Array.isArray(section)
-        ? section.length > 0 &&
-          section.every((exp) => Object.values(exp).some(Boolean))
-        : Object.values(section).some(Boolean)
-    ).length /
-      sections.length) *
-      100
-  );
+  // Calculate completion percentage (client-side only to avoid hydration issues)
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    
+    const percentage = Math.round(
+      (Object.entries(formData).filter(([key, section]) => {
+        if (Array.isArray(section)) {
+          return section.length > 0 &&
+            section.every((exp) => Object.values(exp).some(Boolean));
+        } else {
+          return Object.values(section).some(Boolean);
+        }
+      }).length /
+        sections.length) *
+        100
+    );
+    setCompletionPercentage(percentage);
+  }, [formData, isClient]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     section: string,
     index?: number
   ) => {
@@ -197,7 +255,7 @@ const [formData, setFormData] = useState<FormData>(() => {
     if (index !== undefined) {
       setFormData((prev) => ({
         ...prev,
-        [section]: prev[section as keyof typeof formData].map(
+        [section]: (prev[section as keyof typeof formData] as any[]).map(
           (item: any, i: number) =>
             i === index ? { ...item, [name]: value } : item
         ),
@@ -248,7 +306,7 @@ const [formData, setFormData] = useState<FormData>(() => {
   const removeItem = (section: string, index: number) => {
     setFormData((prev) => ({
       ...prev,
-      [section]: prev[section as keyof typeof formData].filter(
+      [section]: (prev[section as keyof typeof formData] as any[]).filter(
         (_: any, i: number) => i !== index
       ),
     }));
@@ -257,11 +315,11 @@ const [formData, setFormData] = useState<FormData>(() => {
  const handleSaveDraft = () => {
   setIsSaving(true);
   if (typeof window !== 'undefined') {
-    // Save complete form data including all sections
-    localStorage.setItem('resumeDraft', JSON.stringify({
-      ...formData,
-      lastSaved: new Date().toISOString() // Add timestamp for reference
-    }));
+  // Save complete form data including all sections
+  localStorage.setItem('resumeDraft', JSON.stringify({
+    ...formData,
+    lastSaved: new Date().toISOString() // Add timestamp for reference
+  }));
   }
   setTimeout(() => {
     setIsSaving(false);
@@ -276,7 +334,7 @@ const handleTailorResume = async () => {
   try {
     // Create resume data object
     const resumeData = {
-      title: formData.target.jobTitle,
+      title: "Professional Resume",
       date: new Date().toLocaleDateString(),
       content: {
         name: formData.personal.fullName,
@@ -285,7 +343,7 @@ const handleTailorResume = async () => {
         address: formData.personal.address,
         linkedin: formData.personal.linkedin,
         portfolio: formData.personal.portfolio,
-        summary: formData.target.additionalPreferences,
+        summary: "Experienced professional with strong technical and soft skills",
         skills: {
           technical: formData.skills.technical.split(',').map(skill => skill.trim()),
           soft: formData.skills.soft.split(',').map(skill => skill.trim()),
@@ -305,13 +363,7 @@ const handleTailorResume = async () => {
           year: edu.year,
           gpa: edu.gpa,
           honors: edu.honors
-        })),
-        targetJob: {
-          industry: formData.target.industry,
-          salaryExpectation: formData.target.salaryExpectation,
-          locationPreference: formData.target.locationPreference,
-          workType: formData.target.workType
-        }
+        }))
       }
     };
 
@@ -320,8 +372,7 @@ const handleTailorResume = async () => {
       localStorage.setItem(CURRENT_RESUME_KEY, JSON.stringify(resumeData));
     }
 
-    // Save to API (you'll need to get user_id from auth later)
-    const user_id = 'temp-user-id'; // Replace with actual user ID from auth
+    // Save to API using authenticated user
     const resume_text = JSON.stringify(resumeData);
     
     const response = await fetch('/api/saveResume', {
@@ -330,8 +381,8 @@ const handleTailorResume = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        user_id,
-        resume_text
+        resume_text,
+        user_id: user?.id || 'temp-user-id'
       })
     });
 
@@ -352,6 +403,104 @@ const handleTailorResume = async () => {
   } finally {
     setIsSaving(false);
     router.push('/output-page');
+  }
+};
+
+const handleAITailorResume = async () => {
+  if (!jobDescription.trim()) {
+    setShowJobDescriptionModal(true);
+    return;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      setIsTailoring(true);
+      
+      // Create resume data object (same as handleTailorResume)
+      const resumeData = {
+        title: "Professional Resume",
+        date: new Date().toLocaleDateString(),
+        content: {
+          name: formData.personal.fullName,
+          email: formData.personal.email,
+          phone: formData.personal.phone,
+          address: formData.personal.address,
+          linkedin: formData.personal.linkedin,
+          portfolio: formData.personal.portfolio,
+          summary: "Experienced professional with strong technical and soft skills",
+          skills: {
+            technical: formData.skills.technical.split(',').map(skill => skill.trim()),
+            soft: formData.skills.soft.split(',').map(skill => skill.trim()),
+            languages: formData.skills.languages.split(',').map(skill => skill.trim()),
+            certifications: formData.skills.certifications.split(',').map(skill => skill.trim())
+          },
+          experience: formData.experience.map(exp => ({
+            role: exp.jobTitle,
+            company: exp.company,
+            duration: exp.duration,
+            responsibilities: exp.responsibilities,
+            achievements: exp.achievements
+          })),
+          education: formData.education.map(edu => ({
+            degree: edu.degree,
+            institution: edu.institution,
+            year: edu.year,
+            gpa: edu.gpa,
+            honors: edu.honors
+          }))
+        }
+      };
+
+      // Call AI tailor API
+      const tailorResponse = await fetch('/api/tailorResume', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          resumeData,
+          jobDescription
+        })
+      });
+
+      if (tailorResponse.ok) {
+        const tailorResult = await tailorResponse.json();
+        
+        // Save the tailored resume
+        const tailoredResumeText = JSON.stringify(tailorResult.tailoredResume);
+        
+        const saveTailoredResponse = await fetch('/api/saveResume', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            resume_text: tailoredResumeText,
+            user_id: user?.id || 'temp-user-id'
+          })
+        });
+
+        if (saveTailoredResponse.ok) {
+          const saveResult = await saveTailoredResponse.json();
+          console.log('Tailored resume saved successfully:', saveResult);
+          
+          // Save tailored resume to localStorage for output page
+          localStorage.setItem('currentResume', tailoredResumeText);
+          
+          // Navigate to output page
+          router.push('/output-page');
+        } else {
+          console.error('Failed to save tailored resume');
+        }
+      } else {
+        console.error('Failed to tailor resume');
+      }
+    } catch (error) {
+      console.error('Error in AI tailoring:', error);
+    } finally {
+      setIsTailoring(false);
+      setShowJobDescriptionModal(false);
+    }
   }
 };
 
@@ -443,6 +592,30 @@ const handleTailorResume = async () => {
                 placeholder="linkedin.com/in/yourprofile"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Portfolio Website
+              </label>
+              <input
+                name="portfolio"
+                value={formData.personal.portfolio || ""}
+                onChange={(e) => handleInputChange(e, "personal")}
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                placeholder="your-portfolio.com or github.com/username"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Address
+              </label>
+              <input
+                name="address"
+                value={formData.personal.address || ""}
+                onChange={(e) => handleInputChange(e, "personal")}
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                placeholder="Your address (optional)"
+              />
+            </div>
           </div>
         );
 
@@ -454,7 +627,7 @@ const handleTailorResume = async () => {
                 key={index}
                 className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Job Title
@@ -481,6 +654,20 @@ const handleTailorResume = async () => {
                       }
                       className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
                       placeholder="Google Inc."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Duration
+                    </label>
+                    <input
+                      name="duration"
+                      value={exp.duration || ""}
+                      onChange={(e) =>
+                        handleInputChange(e, "experience", index)
+                      }
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                      placeholder="Jan 2023 - Present"
                     />
                   </div>
                 </div>
@@ -532,7 +719,7 @@ const handleTailorResume = async () => {
                       name="degree"
                       value={edu.degree || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="">Select Degree</option>
                       <option value="High School">High School</option>
@@ -551,7 +738,7 @@ const handleTailorResume = async () => {
                       name="institution"
                       value={edu.institution || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="University of California"
                     />
                   </div>
@@ -568,7 +755,7 @@ const handleTailorResume = async () => {
                       max={new Date().getFullYear() + 5}
                       value={edu.year || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="2020"
                     />
                   </div>
@@ -584,7 +771,7 @@ const handleTailorResume = async () => {
                       max="4"
                       value={edu.gpa || ""}
                       onChange={(e) => handleInputChange(e, "education", index)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="3.5"
                     />
                   </div>
@@ -597,7 +784,7 @@ const handleTailorResume = async () => {
                     name="honors"
                     value={edu.honors || ""}
                     onChange={(e) => handleInputChange(e, "education", index)}
-                    className="w-full h-20 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                    className="w-full h-20 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Dean's List, Scholarships, etc."
                   />
                 </div>
@@ -631,7 +818,7 @@ const handleTailorResume = async () => {
                 name="technical"
                 value={formData.skills.technical || ""}
                 onChange={(e) => handleInputChange(e, "skills")}
-                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="JavaScript, React, Python, Machine Learning..."
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -647,7 +834,7 @@ const handleTailorResume = async () => {
                 name="soft"
                 value={formData.skills.soft || ""}
                 onChange={(e) => handleInputChange(e, "skills")}
-                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Leadership, Communication, Teamwork..."
               />
             </div>
@@ -661,7 +848,7 @@ const handleTailorResume = async () => {
                   name="languages"
                   value={formData.skills.languages || ""}
                   onChange={(e) => handleInputChange(e, "skills")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="English (Fluent), Spanish (Intermediate)..."
                 />
               </div>
@@ -673,7 +860,7 @@ const handleTailorResume = async () => {
                   name="certifications"
                   value={formData.skills.certifications || ""}
                   onChange={(e) => handleInputChange(e, "skills")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="AWS Certified, PMP, Google Analytics..."
                 />
               </div>
@@ -681,112 +868,7 @@ const handleTailorResume = async () => {
           </div>
         );
 
-      case "target":
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Desired Job Title
-                </label>
-                <input
-                  name="jobTitle"
-                  value={formData.target.jobTitle || ""}
-                  onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
-                  placeholder="Senior Software Engineer"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Industry
-                </label>
-                <select
-                  name="industry"
-                  value={formData.target.industry || ""}
-                  onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Industry</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Healthcare">Healthcare</option>
-                  <option value="Education">Education</option>
-                  <option value="Manufacturing">Manufacturing</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Salary Expectation
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-gray-500 dark:text-gray-400">
-                    $
-                  </span>
-                  <input
-                    name="salaryExpectation"
-                    type="number"
-                    value={formData.target.salaryExpectation || ""}
-                    onChange={(e) => handleInputChange(e, "target")}
-                    className="w-full pl-8 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
-                    placeholder="80000"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Location Preference
-                </label>
-                <select
-                  name="locationPreference"
-                  value={formData.target.locationPreference || ""}
-                  onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Preference</option>
-                  <option value="On-site">On-site</option>
-                  <option value="Remote">Remote</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Flexible">Flexible</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Work Type
-                </label>
-                <select
-                  name="workType"
-                  value={formData.target.workType || ""}
-                  onChange={(e) => handleInputChange(e, "target")}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Type</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Internship">Internship</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Additional Preferences (Optional)
-              </label>
-              <textarea
-                name="additionalPreferences"
-                value={formData.target.additionalPreferences || ""}
-                onChange={(e) => handleInputChange(e, "target")}
-                className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50 text-gray-900 dark:text-white"
-                placeholder="Company size, benefits, culture preferences..."
-              />
-            </div>
-          </div>
-        );
       default:
         return null;
     }
@@ -926,23 +1008,43 @@ const handleTailorResume = async () => {
                         Next <FiArrowRight />
                       </button>
                     ) : (
-                      <button
-                        onClick={handleTailorResume}
-                        disabled={completionPercentage < 100 || isSaving}
-                        className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center"
-                      >
-                        {isSaving ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Processing...
-                          </>
-                        ) : (
-                          <>Tailor My Resume</>
-                        )}
-                      </button>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={handleTailorResume}
+                          disabled={completionPercentage < 100 || isSaving}
+                          className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center"
+                        >
+                          {isSaving ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Saving...
+                            </>
+                          ) : (
+                            <>Save Resume</>
+                          )}
+                        </button>
+                        
+                        <button
+                          onClick={handleAITailorResume}
+                          disabled={completionPercentage < 100 || isTailoring}
+                          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center"
+                        >
+                          {isTailoring ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              AI Processing...
+                            </>
+                          ) : (
+                            <>AI Tailor Resume</>
+                          )}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -951,6 +1053,209 @@ const handleTailorResume = async () => {
           </div>
         </div>
       </div>
+      
+      {/* Structured Job Description Modal */}
+      {showJobDescriptionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Configure Job Requirements for AI Tailoring
+            </h3>
+            
+            <div className="space-y-6">
+              {/* Experience Level */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Experience Level
+                </label>
+                <select
+                  value={jobDescriptionForm.experienceLevel}
+                  onChange={(e) => setJobDescriptionForm(prev => ({ ...prev, experienceLevel: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">Select Experience Level</option>
+                  <option value="Junior">Junior (0-2 years)</option>
+                  <option value="Mid-level">Mid-level (2-5 years)</option>
+                  <option value="Senior">Senior (5+ years)</option>
+                  <option value="Lead">Lead/Manager</option>
+                </select>
+              </div>
+
+              {/* Technologies */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Required Technologies
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    'React.js', 'Next.js', 'TypeScript', 'JavaScript', 'Node.js', 'Python',
+                    'Java', 'C#', 'PHP', 'Ruby', 'Go', 'Rust', 'Angular', 'Vue.js',
+                    'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'AWS', 'Azure', 'Docker',
+                    'Kubernetes', 'Git', 'REST APIs', 'GraphQL', 'Tailwind CSS'
+                  ].map(tech => (
+                    <label key={tech} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={jobDescriptionForm.technologies.includes(tech)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setJobDescriptionForm(prev => ({
+                              ...prev,
+                              technologies: [...prev.technologies, tech]
+                            }));
+                          } else {
+                            setJobDescriptionForm(prev => ({
+                              ...prev,
+                              technologies: prev.technologies.filter(t => t !== tech)
+                            }));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{tech}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Soft Skills */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Required Soft Skills
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    'Leadership', 'Communication', 'Teamwork', 'Problem Solving',
+                    'Time Management', 'Adaptability', 'Creativity', 'Critical Thinking',
+                    'Project Management', 'Mentoring', 'Collaboration', 'Analytical Skills'
+                  ].map(skill => (
+                    <label key={skill} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={jobDescriptionForm.softSkills.includes(skill)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setJobDescriptionForm(prev => ({
+                              ...prev,
+                              softSkills: [...prev.softSkills, skill]
+                            }));
+                          } else {
+                            setJobDescriptionForm(prev => ({
+                              ...prev,
+                              softSkills: prev.softSkills.filter(s => s !== skill)
+                            }));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{skill}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Industry & Work Type */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Industry
+                  </label>
+                  <select
+                    value={jobDescriptionForm.industry}
+                    onChange={(e) => setJobDescriptionForm(prev => ({ ...prev, industry: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Select Industry</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="E-commerce">E-commerce</option>
+                    <option value="Startup">Startup</option>
+                    <option value="Enterprise">Enterprise</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Work Type
+                  </label>
+                  <select
+                    value={jobDescriptionForm.workType}
+                    onChange={(e) => setJobDescriptionForm(prev => ({ ...prev, workType: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Select Work Type</option>
+                    <option value="Remote">Remote</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Additional Requirements */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Additional Requirements
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    'Testing Experience', 'Cloud Services', 'DevOps', 'CI/CD',
+                    'Microservices', 'Agile/Scrum', 'Database Design', 'API Development',
+                    'UI/UX Design', 'Mobile Development', 'Machine Learning', 'Security'
+                  ].map(req => (
+                    <label key={req} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={jobDescriptionForm.requirements.includes(req)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setJobDescriptionForm(prev => ({
+                              ...prev,
+                              requirements: [...prev.requirements, req]
+                            }));
+                          } else {
+                            setJobDescriptionForm(prev => ({
+                              ...prev,
+                              requirements: prev.requirements.filter(r => r !== req)
+                            }));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{req}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => setShowJobDescriptionModal(false)}
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Generate job description from form data
+                  const generatedDescription = generateJobDescription(jobDescriptionForm);
+                  setJobDescription(generatedDescription);
+                  setShowJobDescriptionModal(false);
+                  handleAITailorResume();
+                }}
+                disabled={!jobDescriptionForm.experienceLevel || jobDescriptionForm.technologies.length === 0}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                Start AI Tailoring
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

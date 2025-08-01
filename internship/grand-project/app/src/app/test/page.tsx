@@ -10,7 +10,7 @@ export default function TestPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: 'test-user-123',
+          user_id: '550e8400-e29b-41d4-a716-446655440000',
           resume_text: JSON.stringify({
             title: 'Test Resume',
             content: { name: 'Test User', email: 'test@example.com' }
@@ -27,7 +27,7 @@ export default function TestPage() {
 
   const testGetResumes = async () => {
     try {
-      const response = await fetch('/api/getResumes?user_id=test-user-123');
+      const response = await fetch('/api/getResumes?user_id=550e8400-e29b-41d4-a716-446655440000');
       const data = await response.json();
       setResult(JSON.stringify(data, null, 2));
     } catch (error) {
@@ -41,7 +41,7 @@ export default function TestPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: 'test-user-123',
+          user_id: '550e8400-e29b-41d4-a716-446655440000',
           resume_id: 'test-resume-id',
           job_description: 'Software Engineer at Google',
           tailored_resume: 'Tailored resume content...'
@@ -57,7 +57,7 @@ export default function TestPage() {
 
   const testGetHistory = async () => {
     try {
-      const response = await fetch('/api/getHistory?user_id=test-user-123');
+      const response = await fetch('/api/getHistory?user_id=550e8400-e29b-41d4-a716-446655440000');
       const data = await response.json();
       setResult(JSON.stringify(data, null, 2));
     } catch (error) {

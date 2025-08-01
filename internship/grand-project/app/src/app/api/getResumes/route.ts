@@ -12,7 +12,14 @@ const supabase = createClient(
 const client = new MongoClient(process.env.MONGODB_URI!);
 
 async function connectToMongoDB() {
-  if (!client.isConnected()) await client.connect();
+  try {
+    await client.connect();
+  } catch (error: any) {
+    // If already connected, ignore the error
+    if (error.message !== 'MongoClient is already connected') {
+      throw error;
+    }
+  }
   return client.db('resume-tailor');
 }
 

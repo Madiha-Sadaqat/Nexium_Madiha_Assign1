@@ -1,6 +1,7 @@
 import './globals.css';
 import type { ReactNode } from 'react';
 import { DarkModeProvider } from './DarkModeProvider';
+import { AuthProvider } from '@/lib/auth-context';
 
 export const metadata = {
   title: 'Create Next App',
@@ -11,9 +12,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <DarkModeProvider>
-          {children}
-        </DarkModeProvider>
+        <AuthProvider>
+          <DarkModeProvider>
+            {children}
+          </DarkModeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
