@@ -182,15 +182,15 @@ export async function DELETE(request: NextRequest) {
         message,
         deletedFromSupabase,
         deletedFromMongo,
-        supabaseError: supabaseError ? (supabaseError as any).message : null,
-        mongoError: mongoError ? (mongoError as any).message : null
+        supabaseError: supabaseError ? (supabaseError as Error).message : null,
+        mongoError: mongoError ? (mongoError as Error).message : null
       });
     } else {
       return NextResponse.json(
         { 
           error: 'Resume not found or could not be deleted',
-          supabaseError: supabaseError ? (supabaseError as any).message : null,
-          mongoError: mongoError ? (mongoError as any).message : null
+          supabaseError: supabaseError ? (supabaseError as Error).message : null,
+          mongoError: mongoError ? (mongoError as Error).message : null
         },
         { status: 404 }
       );

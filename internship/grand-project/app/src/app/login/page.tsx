@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const { signIn } = useAuth();
-  const router = useRouter();
   const { darkMode } = useContext(DarkModeContext) as { darkMode: boolean };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +30,7 @@ export default function LoginPage() {
         setMessage('Check your email for the magic link!');
         setIsSuccess(true);
       }
-    } catch (error) {
+    } catch {
       setMessage('An error occurred. Please try again.');
       setIsSuccess(false);
     } finally {

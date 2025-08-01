@@ -50,7 +50,7 @@ export default function HistoryPage() {
             // Add Supabase resumes
             if (result.supabase_resumes && result.supabase_resumes.length > 0) {
               console.log('Supabase resumes found:', result.supabase_resumes.length);
-              result.supabase_resumes.forEach((resume: any) => {
+              result.supabase_resumes.forEach((resume: { id: string; resume_text: string; created_at: string }) => {
                 try {
                   const resumeData = JSON.parse(resume.resume_text);
                   formattedHistory.push({
@@ -70,7 +70,7 @@ export default function HistoryPage() {
             // Add MongoDB resumes (avoid duplicates)
             if (result.mongo_resumes && result.mongo_resumes.length > 0) {
               console.log('MongoDB resumes found:', result.mongo_resumes.length);
-              result.mongo_resumes.forEach((resume: any) => {
+              result.mongo_resumes.forEach((resume: { _id: string; resume_text: string; created_at: string }) => {
                 try {
                   const resumeData = JSON.parse(resume.resume_text);
                   const exists = formattedHistory.find(h => h.title === resumeData.title);

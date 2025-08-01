@@ -19,8 +19,7 @@ import {
 import { DarkModeContext } from "../DarkModeProvider";
 import { useAuth } from "@/lib/auth-context";
 
-// Constants for localStorage keys
-const RESUME_DRAFT_KEY = 'resumeDraft';
+
 
 // Add types for formData and related state
 interface Experience {

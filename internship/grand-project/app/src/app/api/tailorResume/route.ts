@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
 
     // Generate personalized summary based on content and job description
     const generateSummary = () => {
-      const name = resumeData.content.name || 'Professional';
       const technicalSkills = resumeData.content.skills?.technical || [];
       const experience = resumeData.content.experience || [];
       
@@ -133,7 +132,7 @@ export async function POST(request: NextRequest) {
         },
         
         // Enhance experience descriptions with job-specific improvements
-        experience: resumeData.content.experience?.map((exp: any, index: number) => {
+        experience: resumeData.content.experience?.map((exp: { role: string; company: string; responsibilities: string; achievements: string }, _index: number) => {
           let enhancedResponsibilities = exp.responsibilities || '';
           let enhancedAchievements = exp.achievements || '';
           
@@ -191,7 +190,7 @@ export async function POST(request: NextRequest) {
         }) || [],
         
         // Keep education as is but fix capitalization
-        education: resumeData.content.education?.map((edu: any) => ({
+        education: resumeData.content.education?.map((edu: { degree: string; institution: string }) => ({
           ...edu,
           degree: edu.degree ? edu.degree.charAt(0).toUpperCase() + edu.degree.slice(1) : edu.degree,
           institution: edu.institution ? edu.institution.charAt(0).toUpperCase() + edu.institution.slice(1) : edu.institution

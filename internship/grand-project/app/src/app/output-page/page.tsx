@@ -1,18 +1,14 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import NeuralBackground from "@/components/NeuralBackground";
-import { FiFileText, FiDownload, FiSave, FiSun, FiMoon, FiHome, FiEdit, FiPrinter, FiX, FiLogOut, FiClock } from "react-icons/fi";
+import { FiFileText, FiDownload, FiSave, FiSun, FiMoon, FiHome, FiEdit, FiPrinter, FiLogOut, FiClock } from "react-icons/fi";
 import Link from "next/link";
 import { generateResumePDF, generateResumeDOCX } from "@/lib/resume-generator";
 //import { saveResume } from "@/lib/resume-storage";
 import { DarkModeContext } from "../DarkModeProvider";
 
-// Constants for localStorage keys
-const RESUME_DRAFT_KEY = 'resumeDraft';
-const CURRENT_RESUME_KEY = 'currentResume';
+
 
 // Add types for generatedResume and related state
 interface ExperienceOut {

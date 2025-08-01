@@ -3,7 +3,7 @@ import { createContext, useEffect, useState, ReactNode } from "react";
 
 export const DarkModeContext = createContext({
   darkMode: false,
-  setDarkMode: (_: boolean) => {},
+  setDarkMode: (value: boolean) => {},
 });
 
 export function DarkModeProvider({ children }: { children: ReactNode }) {
