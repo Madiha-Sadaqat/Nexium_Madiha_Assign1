@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get from MongoDB
-    let mongoData = [];
+    let mongoData: any[] = [];
     try {
       const db = await connectToMongoDB();
       mongoData = await db.collection('resumes')
