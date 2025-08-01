@@ -963,20 +963,20 @@ const handleAITailorResume = async () => {
 
                 {renderSectionContent()}
 
-                <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+                <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4 sm:justify-between">
                   <button
                     onClick={handlePrevious}
                     disabled={activeSection === sections[0].id}
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                   >
-                    <FiArrowLeft /> Previous
+                    <FiArrowLeft /> <span className="hidden sm:inline">Previous</span><span className="sm:hidden">Prev</span>
                   </button>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
                     <button
                       onClick={handleSaveDraft}
                       disabled={isSaving}
-                      className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                     >
                       {isSaving ? (
                         <>
@@ -984,10 +984,14 @@ const handleAITailorResume = async () => {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Saving...
+                          <span className="hidden sm:inline">Saving...</span>
+                          <span className="sm:hidden">Saving</span>
                         </>
                       ) : (
-                        <>Save Draft</>
+                        <>
+                          <span className="hidden sm:inline">Save Draft</span>
+                          <span className="sm:hidden">Draft</span>
+                        </>
                       )}
                     </button>
 
@@ -995,16 +999,16 @@ const handleAITailorResume = async () => {
                       <button
                         onClick={handleNext}
                         disabled={!isSectionComplete(activeSection) || isSaving}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white rounded-lg transition-colors disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
                       >
-                        Next <FiArrowRight />
+                        <span className="hidden sm:inline">Next</span><span className="sm:hidden">Next</span> <FiArrowRight />
                       </button>
                     ) : (
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full">
                         <button
                           onClick={handleTailorResume}
                           disabled={completionPercentage < 100 || isSaving}
-                          className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center"
+                          className="flex-1 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center text-sm sm:text-base"
                         >
                           {isSaving ? (
                             <>
@@ -1012,17 +1016,21 @@ const handleAITailorResume = async () => {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              Saving...
+                              <span className="hidden sm:inline">Saving...</span>
+                              <span className="sm:hidden">Saving</span>
                             </>
                           ) : (
-                            <>Save Resume</>
+                            <>
+                              <span className="hidden sm:inline">Save Resume</span>
+                              <span className="sm:hidden">Save</span>
+                            </>
                           )}
                         </button>
                         
                         <button
                           onClick={handleAITailorResume}
                           disabled={completionPercentage < 100 || isTailoring}
-                          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center"
+                          className="flex-1 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md transition-all disabled:opacity-50 flex items-center justify-center text-sm sm:text-base"
                         >
                           {isTailoring ? (
                             <>
@@ -1030,10 +1038,14 @@ const handleAITailorResume = async () => {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              AI Processing...
+                              <span className="hidden sm:inline">AI Processing...</span>
+                              <span className="sm:hidden">AI Processing</span>
                             </>
                           ) : (
-                            <>AI Tailor Resume</>
+                            <>
+                              <span className="hidden sm:inline">AI Tailor Resume</span>
+                              <span className="sm:hidden">AI Tailor</span>
+                            </>
                           )}
                         </button>
                       </div>
