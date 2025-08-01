@@ -43,10 +43,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string) => {
+    // Use Vercel URL for production, localhost for development
+    const redirectUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://resume-tailor-ecru.vercel.app/auth/callback'
+      : `${window.location.origin}/auth/callback`;
+    
+    console.log('Using redirect URL:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: redirectUrl,
       },
     });
     return { error };
